@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   Building2, 
   DollarSign, 
   Users, 
   Calendar,
-  ArrowUpRight,
-  MoreHorizontal,
   Search,
   Filter,
-  Loader2
+  Loader2,
+  TrendingUp,
+  AlertTriangle
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/ui/StatCard';
@@ -23,26 +23,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { CreateOrganizationDialog } from '@/components/admin/CreateOrganizationDialog';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
-import { supabase } from '@/integrations/supabase/client';
+import { OrganizationActions } from '@/components/admin/OrganizationActions';
+import { useSuperAdminStats } from '@/hooks/useSuperAdminStats';
 import { cn } from '@/lib/utils';
-
-interface Organization {
-  id: string;
-  name: string;
-  slug: string;
-  email: string | null;
-  status: 'active' | 'trial' | 'inactive';
-  plan: string;
-  created_at: string;
-}
 
 const statusStyles = {
   active: 'bg-success/10 text-success border-success/20',
@@ -58,35 +43,29 @@ const planPrices: Record<string, number> = {
 };
 
 export default function SuperAdminDashboard() {
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { 
+    stats, 
+    organizations, 
+    isLoading, 
+    refetch,
+    updateOrganizationStatus,
+    updateOrganizationPlan 
+  } = useSuperAdminStats();
   const [searchTerm, setSearchTerm] = useState('');
-
-  const fetchOrganizations = async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from('organizations')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      setOrganizations(data as Organization[]);
-    }
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    fetchOrganizations();
-  }, []);
 
   const filteredOrganizations = organizations.filter(org =>
     org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     org.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalMRR = organizations.reduce((acc, org) => acc + (planPrices[org.plan] || 0), 0);
-  const activeOrgs = organizations.filter(org => org.status === 'active').length;
-  const trialOrgs = organizations.filter(org => org.status === 'trial').length;
+  // Check for trials expiring soon (next 3 days)
+  const expiringTrials = organizations.filter(org => {
+    if (org.status !== 'trial' || !org.trial_ends_at) return false;
+    const trialEnd = new Date(org.trial_ends_at);
+    const now = new Date();
+    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    return trialEnd <= threeDaysFromNow && trialEnd >= now;
+  });
 
   return (
     <DashboardLayout>
@@ -102,39 +81,70 @@ export default function SuperAdminDashboard() {
           <div className="flex gap-2">
             <CreateUserDialog 
               organizations={organizations.map(o => ({ id: o.id, name: o.name }))}
-              onUserCreated={fetchOrganizations}
+              onUserCreated={refetch}
             />
           </div>
         </div>
+
+        {/* Expiring Trials Alert */}
+        {expiringTrials.length > 0 && (
+          <div className="bg-warning/10 border border-warning/20 rounded-xl p-4 flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
+            <div>
+              <p className="font-medium text-warning">
+                {expiringTrials.length} {expiringTrials.length === 1 ? 'trial expira' : 'trials expiram'} nos próximos 3 dias
+              </p>
+              <p className="text-sm text-warning/80">
+                {expiringTrials.map(t => t.name).join(', ')}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
           <StatCard
             title="Total de Empresas"
-            value={organizations.length}
+            value={stats.totalOrganizations}
             change={12}
             icon={<Building2 className="h-6 w-6" />}
           />
           <StatCard
-            title="Receita Mensal Recorrente"
-            value={`R$ ${totalMRR.toLocaleString()}`}
+            title="Receita Mensal (MRR)"
+            value={`R$ ${stats.monthlyRevenue.toLocaleString()}`}
             change={8.5}
             icon={<DollarSign className="h-6 w-6" />}
             variant="primary"
           />
           <StatCard
             title="Trials Ativos"
-            value={trialOrgs}
+            value={stats.trialOrganizations}
             change={25}
             icon={<Users className="h-6 w-6" />}
           />
           <StatCard
-            title="Empresas Ativas"
-            value={activeOrgs}
-            change={15}
-            icon={<Calendar className="h-6 w-6" />}
+            title="Taxa de Conversão"
+            value={`${stats.trialConversionRate}%`}
+            change={5}
+            icon={<TrendingUp className="h-6 w-6" />}
             variant="success"
           />
+        </div>
+
+        {/* Secondary Stats */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border border-border bg-card p-6">
+            <p className="text-sm text-muted-foreground">Empresas Ativas</p>
+            <p className="text-3xl font-bold mt-1">{stats.activeOrganizations}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-6">
+            <p className="text-sm text-muted-foreground">Total de Agendamentos</p>
+            <p className="text-3xl font-bold mt-1">{stats.totalAppointments.toLocaleString()}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-6">
+            <p className="text-sm text-muted-foreground">Total de Clientes</p>
+            <p className="text-3xl font-bold mt-1">{stats.totalCustomers.toLocaleString()}</p>
+          </div>
         </div>
 
         {/* Organizations Table */}
@@ -159,7 +169,7 @@ export default function SuperAdminDashboard() {
               <Button variant="outline" size="icon" className="shrink-0">
                 <Filter className="h-4 w-4" />
               </Button>
-              <CreateOrganizationDialog onOrganizationCreated={fetchOrganizations} />
+              <CreateOrganizationDialog onOrganizationCreated={refetch} />
             </div>
           </div>
 
@@ -183,8 +193,9 @@ export default function SuperAdminDashboard() {
                     <TableHead>Organização</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Plano</TableHead>
+                    <TableHead className="text-right">Clientes</TableHead>
+                    <TableHead className="text-right">Agendamentos</TableHead>
                     <TableHead className="text-right">MRR</TableHead>
-                    <TableHead className="text-right">Criado em</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -198,50 +209,43 @@ export default function SuperAdminDashboard() {
                           </div>
                           <div>
                             <p className="font-medium">{org.name}</p>
-                            <p className="text-sm text-muted-foreground">{org.email || '-'}</p>
+                            <p className="text-sm text-muted-foreground">{org.email || org.slug}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge 
-                          variant="outline" 
-                          className={cn("capitalize", statusStyles[org.status])}
-                        >
-                          {org.status === 'active' ? 'Ativo' : org.status === 'trial' ? 'Trial' : 'Inativo'}
-                        </Badge>
+                        <div className="flex flex-col gap-1">
+                          <Badge 
+                            variant="outline" 
+                            className={cn("capitalize w-fit", statusStyles[org.status])}
+                          >
+                            {org.status === 'active' ? 'Ativo' : org.status === 'trial' ? 'Trial' : 'Inativo'}
+                          </Badge>
+                          {org.status === 'trial' && org.trial_ends_at && (
+                            <span className="text-xs text-muted-foreground">
+                              Expira em {new Date(org.trial_ends_at).toLocaleDateString('pt-BR')}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <span className="capitalize text-sm">{org.plan}</span>
                       </TableCell>
+                      <TableCell className="text-right">
+                        {org.customersCount}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {org.appointmentsCount}
+                      </TableCell>
                       <TableCell className="text-right font-medium">
                         {planPrices[org.plan] > 0 ? `R$ ${planPrices[org.plan]}` : '-'}
                       </TableCell>
-                      <TableCell className="text-right text-sm text-muted-foreground">
-                        {new Date(org.created_at).toLocaleDateString('pt-BR')}
-                      </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <ArrowUpRight className="mr-2 h-4 w-4" />
-                              Ver Detalhes
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>Editar Organização</DropdownMenuItem>
-                            <DropdownMenuItem>Gerenciar Assinatura</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
-                              Desativar
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <OrganizationActions
+                          organization={org}
+                          onStatusChange={updateOrganizationStatus}
+                          onPlanChange={updateOrganizationPlan}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}

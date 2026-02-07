@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from 'date-fns';
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
 
@@ -45,6 +45,36 @@ export interface CreateAppointmentData {
   price: number;
   notes?: string;
   status?: AppointmentStatus;
+}
+
+async function checkBookingAvailability(
+  organizationId: string,
+  staffId: string | null,
+  scheduledAt: string,
+  duration: number,
+  excludeAppointmentId?: string
+): Promise<{ available: boolean; message?: string }> {
+  try {
+    const response = await supabase.functions.invoke('check-booking', {
+      body: {
+        organization_id: organizationId,
+        staff_id: staffId,
+        scheduled_at: scheduledAt,
+        duration: duration,
+        exclude_appointment_id: excludeAppointmentId,
+      },
+    });
+
+    if (response.error) {
+      console.error('Error checking booking:', response.error);
+      return { available: true }; // Fallback to allow booking if check fails
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Error calling check-booking:', error);
+    return { available: true }; // Fallback to allow booking if check fails
+  }
 }
 
 export function useAppointments(date?: Date) {
@@ -111,6 +141,23 @@ export function useAppointments(date?: Date) {
   const createAppointment = async (data: CreateAppointmentData) => {
     if (!organization?.id) return null;
 
+    // Check for double-booking
+    const availability = await checkBookingAvailability(
+      organization.id,
+      data.staff_id || null,
+      data.scheduled_at,
+      data.duration
+    );
+
+    if (!availability.available) {
+      toast({
+        title: 'Horário indisponível',
+        description: availability.message || 'Este horário já está ocupado.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+
     const { data: newAppointment, error } = await supabase
       .from('appointments')
       .insert({
@@ -154,6 +201,31 @@ export function useAppointments(date?: Date) {
   };
 
   const updateAppointment = async (id: string, data: Partial<CreateAppointmentData>) => {
+    if (!organization?.id) return false;
+
+    // If updating time/staff, check for conflicts
+    if (data.scheduled_at || data.staff_id !== undefined) {
+      const existing = appointments.find(a => a.id === id);
+      if (existing) {
+        const availability = await checkBookingAvailability(
+          organization.id,
+          data.staff_id ?? existing.staff_id,
+          data.scheduled_at ?? existing.scheduled_at,
+          data.duration ?? existing.duration,
+          id
+        );
+
+        if (!availability.available) {
+          toast({
+            title: 'Horário indisponível',
+            description: availability.message || 'Este horário já está ocupado.',
+            variant: 'destructive',
+          });
+          return false;
+        }
+      }
+    }
+
     const { error } = await supabase
       .from('appointments')
       .update({
@@ -206,7 +278,6 @@ export function useAppointments(date?: Date) {
     if (status === 'no_show') {
       const appointment = appointments.find(a => a.id === id);
       if (appointment?.customer_id) {
-        // Buscar o valor atual e incrementar
         const { data: customer } = await supabase
           .from('customers')
           .select('no_shows')
@@ -226,7 +297,6 @@ export function useAppointments(date?: Date) {
     if (status === 'completed') {
       const appointment = appointments.find(a => a.id === id);
       if (appointment?.customer_id) {
-        // Buscar o valor atual e atualizar
         const { data: customer } = await supabase
           .from('customers')
           .select('total_visits, total_spent')

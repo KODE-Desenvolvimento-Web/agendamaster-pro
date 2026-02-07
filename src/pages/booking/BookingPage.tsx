@@ -242,6 +242,44 @@ export default function BookingPage() {
     setIsSubmitting(true);
 
     try {
+      // First, check booking availability using edge function
+      const [hour, minute] = selectedTime.split(':').map(Number);
+      const scheduledAt = setMinutes(setHours(selectedDate, hour), minute);
+
+      const availabilityCheck = await supabase.functions.invoke('check-booking', {
+        body: {
+          organization_id: organization.id,
+          staff_id: null, // Public booking doesn't select staff
+          scheduled_at: scheduledAt.toISOString(),
+          duration: selectedServiceData.duration,
+        },
+      });
+
+      if (availabilityCheck.error) {
+        throw new Error('Erro ao verificar disponibilidade');
+      }
+
+      if (!availabilityCheck.data.available) {
+        toast({
+          title: 'Horário indisponível',
+          description: availabilityCheck.data.message || 'Este horário não está mais disponível.',
+          variant: 'destructive',
+        });
+        // Refresh appointments to update available slots
+        const startOfSelectedDay = startOfDay(selectedDate);
+        const endOfSelectedDay = addDays(startOfSelectedDay, 1);
+        const { data } = await supabase
+          .from('appointments')
+          .select('scheduled_at, duration')
+          .eq('organization_id', organization.id)
+          .gte('scheduled_at', startOfSelectedDay.toISOString())
+          .lt('scheduled_at', endOfSelectedDay.toISOString())
+          .in('status', ['pending', 'confirmed']);
+        setExistingAppointments(data || []);
+        setIsSubmitting(false);
+        return;
+      }
+
       // Create or find customer
       let customerId: string;
 
@@ -283,9 +321,6 @@ export default function BookingPage() {
       }
 
       // Create appointment
-      const [hour, minute] = selectedTime.split(':').map(Number);
-      const scheduledAt = setMinutes(setHours(selectedDate, hour), minute);
-
       const { error: appointmentError } = await supabase
         .from('appointments')
         .insert({
