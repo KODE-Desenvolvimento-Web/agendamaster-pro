@@ -51,7 +51,7 @@ const appointments = [
   { id: '5', time: '15:30', duration: 120, customer: 'Juliana Costa', service: 'Coloração', status: 'confirmed' },
 ];
 
-const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -59,7 +59,7 @@ export default function CalendarPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const formatDateHeader = () => {
-    return currentDate.toLocaleDateString('en-US', {
+    return currentDate.toLocaleDateString('pt-BR', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -95,9 +95,9 @@ export default function CalendarPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Agenda</h1>
             <p className="mt-1 text-muted-foreground">
-              Manage appointments and schedule
+              Gerencie agendamentos e horários
             </p>
           </div>
           
@@ -105,22 +105,22 @@ export default function CalendarPage() {
             <DialogTrigger asChild>
               <Button className="bg-gradient-primary shadow-glow hover:shadow-lg transition-smooth">
                 <Plus className="mr-2 h-4 w-4" />
-                New Appointment
+                Novo Agendamento
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Create Appointment</DialogTitle>
+                <DialogTitle>Criar Agendamento</DialogTitle>
                 <DialogDescription>
-                  Schedule a new appointment for a customer.
+                  Agende um novo horário para um cliente.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="customer">Customer</Label>
+                  <Label htmlFor="customer">Cliente</Label>
                   <Select>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select customer" />
+                      <SelectValue placeholder="Selecione o cliente" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ana">Ana Silva</SelectItem>
@@ -130,28 +130,28 @@ export default function CalendarPage() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="service">Service</Label>
+                  <Label htmlFor="service">Serviço</Label>
                   <Select>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select service" />
+                      <SelectValue placeholder="Selecione o serviço" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="haircut">Haircut + Blowdry (90min)</SelectItem>
-                      <SelectItem value="beard">Beard Trim (30min)</SelectItem>
+                      <SelectItem value="haircut">Corte + Escova (90min)</SelectItem>
+                      <SelectItem value="beard">Barba (30min)</SelectItem>
                       <SelectItem value="manicure">Manicure + Pedicure (60min)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="date">Date</Label>
+                    <Label htmlFor="date">Data</Label>
                     <Input id="date" type="date" />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="time">Time</Label>
+                    <Label htmlFor="time">Horário</Label>
                     <Select>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select time" />
+                        <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
                         {timeSlots.map(slot => (
@@ -164,10 +164,10 @@ export default function CalendarPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button className="bg-gradient-primary" onClick={() => setIsDialogOpen(false)}>
-                  Create Appointment
+                  Criar Agendamento
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -197,9 +197,9 @@ export default function CalendarPage() {
                   variant="outline"
                   onClick={() => setCurrentDate(new Date())}
                 >
-                  Today
+                  Hoje
                 </Button>
-                <h2 className="text-lg font-semibold ml-2">
+                <h2 className="text-lg font-semibold ml-2 capitalize">
                   {formatDateHeader()}
                 </h2>
               </div>
@@ -212,11 +212,10 @@ export default function CalendarPage() {
                     size="sm"
                     onClick={() => setView(v)}
                     className={cn(
-                      "capitalize",
                       view === v && "bg-background shadow-sm"
                     )}
                   >
-                    {v}
+                    {v === 'day' ? 'Dia' : v === 'week' ? 'Semana' : 'Mês'}
                   </Button>
                 ))}
               </div>
@@ -267,7 +266,7 @@ export default function CalendarPage() {
                         </div>
                       ) : (
                         <div className="flex-1 border border-dashed border-border rounded-lg flex items-center justify-center text-sm text-muted-foreground min-h-[40px]">
-                          Available
+                          Disponível
                         </div>
                       )}
                     </div>

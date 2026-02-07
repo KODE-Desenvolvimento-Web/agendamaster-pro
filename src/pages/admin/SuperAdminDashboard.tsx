@@ -107,35 +107,35 @@ export default function SuperAdminDashboard() {
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Super Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Painel Super Admin</h1>
           <p className="mt-1 text-muted-foreground">
-            Monitor your SaaS platform performance and manage organizations.
+            Monitore o desempenho da plataforma SaaS e gerencie as organizações.
           </p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
           <StatCard
-            title="Total Companies"
+            title="Total de Empresas"
             value={organizations.length}
             change={12}
             icon={<Building2 className="h-6 w-6" />}
           />
           <StatCard
-            title="Monthly Recurring Revenue"
+            title="Receita Mensal Recorrente"
             value={`R$ ${totalMRR.toLocaleString()}`}
             change={8.5}
             icon={<DollarSign className="h-6 w-6" />}
             variant="primary"
           />
           <StatCard
-            title="Active Trials"
+            title="Trials Ativos"
             value={trialOrgs}
             change={25}
             icon={<Users className="h-6 w-6" />}
           />
           <StatCard
-            title="Bookings Today"
+            title="Agendamentos Hoje"
             value={totalBookingsToday}
             change={15}
             icon={<Calendar className="h-6 w-6" />}
@@ -147,16 +147,16 @@ export default function SuperAdminDashboard() {
         <div className="rounded-xl border border-border bg-card">
           <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Organizations</h2>
+              <h2 className="text-lg font-semibold">Organizações</h2>
               <p className="text-sm text-muted-foreground">
-                Manage all registered companies
+                Gerencie todas as empresas cadastradas
               </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input 
-                  placeholder="Search organizations..." 
+                  placeholder="Buscar organizações..." 
                   className="pl-9 w-full sm:w-64"
                 />
               </div>
@@ -165,7 +165,7 @@ export default function SuperAdminDashboard() {
               </Button>
               <Button className="bg-gradient-primary shadow-glow hover:shadow-lg transition-smooth">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Organization
+                Adicionar Organização
               </Button>
             </div>
           </div>
@@ -174,12 +174,12 @@ export default function SuperAdminDashboard() {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead>Organization</TableHead>
+                  <TableHead>Organização</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Plan</TableHead>
+                  <TableHead>Plano</TableHead>
                   <TableHead className="text-right">MRR</TableHead>
-                  <TableHead className="text-right">Bookings Today</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">Agendamentos Hoje</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -201,7 +201,7 @@ export default function SuperAdminDashboard() {
                         variant="outline" 
                         className={cn("capitalize", statusStyles[org.status])}
                       >
-                        {org.status}
+                        {org.status === 'active' ? 'Ativo' : org.status === 'trial' ? 'Trial' : 'Inativo'}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -232,12 +232,12 @@ export default function SuperAdminDashboard() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>
                             <ArrowUpRight className="mr-2 h-4 w-4" />
-                            View Details
+                            Ver Detalhes
                           </DropdownMenuItem>
-                          <DropdownMenuItem>Edit Organization</DropdownMenuItem>
-                          <DropdownMenuItem>Manage Subscription</DropdownMenuItem>
+                          <DropdownMenuItem>Editar Organização</DropdownMenuItem>
+                          <DropdownMenuItem>Gerenciar Assinatura</DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive">
-                            Deactivate
+                            Desativar
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

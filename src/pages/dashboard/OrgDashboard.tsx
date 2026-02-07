@@ -83,10 +83,10 @@ const topCustomers = [
 ];
 
 const statusConfig = {
-  confirmed: { label: 'Confirmed', icon: CheckCircle2, className: 'text-success bg-success/10' },
-  pending: { label: 'Pending', icon: Clock, className: 'text-warning bg-warning/10' },
-  no_show: { label: 'No Show', icon: XCircle, className: 'text-destructive bg-destructive/10' },
-  cancelled: { label: 'Cancelled', icon: XCircle, className: 'text-muted-foreground bg-muted' },
+  confirmed: { label: 'Confirmado', icon: CheckCircle2, className: 'text-success bg-success/10' },
+  pending: { label: 'Pendente', icon: Clock, className: 'text-warning bg-warning/10' },
+  no_show: { label: 'Não Compareceu', icon: XCircle, className: 'text-destructive bg-destructive/10' },
+  cancelled: { label: 'Cancelado', icon: XCircle, className: 'text-muted-foreground bg-muted' },
 };
 
 export default function OrgDashboard() {
@@ -102,21 +102,21 @@ export default function OrgDashboard() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Painel</h1>
             <p className="mt-1 text-muted-foreground">
-              Welcome back! Here's what's happening today.
+              Bem-vindo de volta! Veja o que está acontecendo hoje.
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" asChild>
               <Link to="/calendar">
                 <Calendar className="mr-2 h-4 w-4" />
-                View Calendar
+                Ver Agenda
               </Link>
             </Button>
             <Button className="bg-gradient-primary shadow-glow hover:shadow-lg transition-smooth" asChild>
               <Link to="/calendar">
-                New Booking
+                Novo Agendamento
               </Link>
             </Button>
           </div>
@@ -125,24 +125,24 @@ export default function OrgDashboard() {
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
           <StatCard
-            title="Today's Appointments"
+            title="Agendamentos Hoje"
             value={todaysAppointments.length}
             icon={<Calendar className="h-6 w-6" />}
           />
           <StatCard
-            title="Confirmed"
+            title="Confirmados"
             value={confirmedAppointments}
             icon={<CheckCircle2 className="h-6 w-6" />}
             variant="success"
           />
           <StatCard
-            title="Pending Confirmation"
+            title="Aguardando Confirmação"
             value={pendingAppointments}
             icon={<Clock className="h-6 w-6" />}
             variant="warning"
           />
           <StatCard
-            title="Today's Revenue"
+            title="Receita de Hoje"
             value={`R$ ${todayRevenue}`}
             change={12}
             icon={<DollarSign className="h-6 w-6" />}
@@ -156,9 +156,9 @@ export default function OrgDashboard() {
           <Card className="lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Today's Schedule</CardTitle>
+                <CardTitle>Agenda de Hoje</CardTitle>
                 <CardDescription>
-                  {new Date().toLocaleDateString('en-US', { 
+                  {new Date().toLocaleDateString('pt-BR', { 
                     weekday: 'long', 
                     year: 'numeric', 
                     month: 'long', 
@@ -168,7 +168,7 @@ export default function OrgDashboard() {
               </div>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/calendar">
-                  View All
+                  Ver Tudo
                   <ArrowUpRight className="ml-1 h-3 w-3" />
                 </Link>
               </Button>
@@ -234,9 +234,9 @@ export default function OrgDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                Top Customers
+                Melhores Clientes
               </CardTitle>
-              <CardDescription>This month's most active customers</CardDescription>
+              <CardDescription>Clientes mais ativos do mês</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -263,7 +263,7 @@ export default function OrgDashboard() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{customer.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {customer.visits} visits
+                        {customer.visits} visitas
                       </p>
                     </div>
                     <p className="text-sm font-medium text-success">
@@ -275,7 +275,7 @@ export default function OrgDashboard() {
               
               <Button variant="outline" className="w-full mt-4" asChild>
                 <Link to="/customers">
-                  View All Customers
+                  Ver Todos os Clientes
                   <ArrowUpRight className="ml-1 h-3 w-3" />
                 </Link>
               </Button>
@@ -290,25 +290,25 @@ export default function OrgDashboard() {
               <Button variant="outline" className="h-auto py-4 flex-col gap-2" asChild>
                 <Link to="/services">
                   <TrendingUp className="h-5 w-5 text-primary" />
-                  <span>Manage Services</span>
+                  <span>Gerenciar Serviços</span>
                 </Link>
               </Button>
               <Button variant="outline" className="h-auto py-4 flex-col gap-2" asChild>
                 <Link to="/customers">
                   <Users className="h-5 w-5 text-primary" />
-                  <span>Customer CRM</span>
+                  <span>CRM de Clientes</span>
                 </Link>
               </Button>
               <Button variant="outline" className="h-auto py-4 flex-col gap-2" asChild>
                 <Link to="/reports">
                   <DollarSign className="h-5 w-5 text-primary" />
-                  <span>View Reports</span>
+                  <span>Ver Relatórios</span>
                 </Link>
               </Button>
               <Button variant="outline" className="h-auto py-4 flex-col gap-2" asChild>
                 <Link to="/settings/notifications">
                   <UserX className="h-5 w-5 text-destructive" />
-                  <span>No-Show Settings</span>
+                  <span>Config. No-Show</span>
                 </Link>
               </Button>
             </div>

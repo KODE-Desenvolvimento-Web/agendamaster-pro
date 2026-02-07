@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils';
 const organization = {
   name: 'Beleza Total Salon',
   slug: 'beleza-total',
-  description: 'Premium hair and beauty services in the heart of São Paulo.',
+  description: 'Serviços premium de cabelo e beleza no coração de São Paulo.',
   address: 'Av. Paulista, 1000 - São Paulo, SP',
   phone: '+55 11 3000-0000',
   rating: 4.9,
@@ -38,11 +38,11 @@ const organization = {
 };
 
 const services = [
-  { id: '1', name: 'Haircut + Blowdry', duration: 90, price: 150, category: 'Hair' },
-  { id: '2', name: 'Men\'s Haircut', duration: 45, price: 60, category: 'Hair' },
-  { id: '3', name: 'Beard Trim', duration: 30, price: 50, category: 'Beard' },
-  { id: '4', name: 'Manicure + Pedicure', duration: 60, price: 80, category: 'Nails' },
-  { id: '5', name: 'Hair Coloring', duration: 120, price: 280, category: 'Hair' },
+  { id: '1', name: 'Corte + Escova', duration: 90, price: 150, category: 'Cabelo' },
+  { id: '2', name: 'Corte Masculino', duration: 45, price: 60, category: 'Cabelo' },
+  { id: '3', name: 'Barba', duration: 30, price: 50, category: 'Barba' },
+  { id: '4', name: 'Manicure + Pedicure', duration: 60, price: 80, category: 'Unhas' },
+  { id: '5', name: 'Coloração', duration: 120, price: 280, category: 'Cabelo' },
 ];
 
 const timeSlots = [
@@ -75,7 +75,7 @@ export default function BookingPage() {
 
   const handleConfirm = () => {
     // In production, this would submit to the backend
-    alert('Booking confirmed! You will receive a confirmation email shortly.');
+    alert('Agendamento confirmado! Você receberá um email de confirmação em breve.');
   };
 
   return (
@@ -93,7 +93,7 @@ export default function BookingPage() {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" />
                   <span>{organization.rating}</span>
-                  <span>({organization.reviewCount} reviews)</span>
+                  <span>({organization.reviewCount} avaliações)</span>
                 </div>
               </div>
             </div>
@@ -132,7 +132,7 @@ export default function BookingPage() {
                   "text-sm font-medium hidden sm:inline",
                   step >= s ? "text-foreground" : "text-muted-foreground"
                 )}>
-                  {s === 1 ? 'Select Service' : s === 2 ? 'Choose Time' : 'Confirm'}
+                  {s === 1 ? 'Escolher Serviço' : s === 2 ? 'Data e Hora' : 'Confirmar'}
                 </span>
                 {s < 3 && (
                   <ArrowRight className="h-4 w-4 text-muted-foreground mx-2" />
@@ -147,8 +147,8 @@ export default function BookingPage() {
           <div className="max-w-2xl mx-auto animate-fade-in">
             <Card>
               <CardHeader>
-                <CardTitle>Select a Service</CardTitle>
-                <CardDescription>Choose the service you'd like to book</CardDescription>
+                <CardTitle>Escolha um Serviço</CardTitle>
+                <CardDescription>Selecione o serviço que deseja agendar</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -192,7 +192,7 @@ export default function BookingPage() {
                   disabled={!selectedService}
                   onClick={() => setStep(2)}
                 >
-                  Continue
+                  Continuar
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
@@ -207,21 +207,21 @@ export default function BookingPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Select Date & Time</CardTitle>
+                    <CardTitle>Escolha Data e Horário</CardTitle>
                     <CardDescription>
                       {selectedServiceData?.name} - {selectedServiceData?.duration} min
                     </CardDescription>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => setStep(1)}>
                     <ChevronLeft className="mr-1 h-4 w-4" />
-                    Back
+                    Voltar
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
                 {/* Date Selection */}
                 <div className="mb-6">
-                  <Label className="mb-3 block">Select Date</Label>
+                  <Label className="mb-3 block">Selecione a Data</Label>
                   <div className="flex gap-2 overflow-x-auto pb-2">
                     {generateDates().map((date) => {
                       const isSelected = selectedDate?.toDateString() === date.toDateString();
@@ -242,15 +242,15 @@ export default function BookingPage() {
                           )}
                         >
                           <span className="text-xs font-medium">
-                            {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                            {date.toLocaleDateString('pt-BR', { weekday: 'short' })}
                           </span>
                           <span className="text-lg font-bold">{date.getDate()}</span>
                           <span className="text-xs">
-                            {date.toLocaleDateString('en-US', { month: 'short' })}
+                            {date.toLocaleDateString('pt-BR', { month: 'short' })}
                           </span>
                           {isToday && !isSelected && (
                             <Badge variant="secondary" className="text-[10px] mt-1 px-1">
-                              Today
+                              Hoje
                             </Badge>
                           )}
                         </button>
@@ -262,7 +262,7 @@ export default function BookingPage() {
                 {/* Time Selection */}
                 {selectedDate && (
                   <div className="animate-fade-in">
-                    <Label className="mb-3 block">Select Time</Label>
+                    <Label className="mb-3 block">Selecione o Horário</Label>
                     <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                       {timeSlots.map((time) => {
                         const isAvailable = availableSlots.includes(time);
@@ -295,7 +295,7 @@ export default function BookingPage() {
                   disabled={!selectedDate || !selectedTime}
                   onClick={() => setStep(3)}
                 >
-                  Continue
+                  Continuar
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
@@ -310,28 +310,28 @@ export default function BookingPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Confirm Your Booking</CardTitle>
-                    <CardDescription>Enter your details to complete the booking</CardDescription>
+                    <CardTitle>Confirme seu Agendamento</CardTitle>
+                    <CardDescription>Preencha seus dados para finalizar</CardDescription>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => setStep(2)}>
                     <ChevronLeft className="mr-1 h-4 w-4" />
-                    Back
+                    Voltar
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
                 {/* Booking Summary */}
                 <div className="rounded-lg border border-border bg-muted/30 p-4 mb-6">
-                  <h3 className="font-medium mb-3">Booking Summary</h3>
+                  <h3 className="font-medium mb-3">Resumo do Agendamento</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Service</span>
+                      <span className="text-muted-foreground">Serviço</span>
                       <span className="font-medium">{selectedServiceData?.name}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Date</span>
+                      <span className="text-muted-foreground">Data</span>
                       <span className="font-medium">
-                        {selectedDate?.toLocaleDateString('en-US', {
+                        {selectedDate?.toLocaleDateString('pt-BR', {
                           weekday: 'long',
                           month: 'long',
                           day: 'numeric',
@@ -339,11 +339,11 @@ export default function BookingPage() {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Time</span>
+                      <span className="text-muted-foreground">Horário</span>
                       <span className="font-medium">{selectedTime}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Duration</span>
+                      <span className="text-muted-foreground">Duração</span>
                       <span className="font-medium">{selectedServiceData?.duration} min</span>
                     </div>
                     <div className="border-t border-border pt-2 mt-2 flex justify-between">
@@ -358,10 +358,10 @@ export default function BookingPage() {
                 {/* Customer Info Form */}
                 <div className="space-y-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">Nome Completo</Label>
                     <Input
                       id="name"
-                      placeholder="Your name"
+                      placeholder="Seu nome"
                       value={customerInfo.name}
                       onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
                     />
@@ -371,13 +371,13 @@ export default function BookingPage() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder="seu@email.com"
                       value={customerInfo.email}
                       onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="phone">Phone (WhatsApp)</Label>
+                    <Label htmlFor="phone">Telefone (WhatsApp)</Label>
                     <Input
                       id="phone"
                       type="tel"
@@ -395,12 +395,12 @@ export default function BookingPage() {
                   onClick={handleConfirm}
                 >
                   <Check className="mr-2 h-4 w-4" />
-                  Confirm Booking
+                  Confirmar Agendamento
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground mt-4">
-                  You will receive a confirmation via email and WhatsApp.
-                  No payment required at this time.
+                  Você receberá uma confirmação por email e WhatsApp.
+                  Nenhum pagamento necessário no momento.
                 </p>
               </CardContent>
             </Card>
@@ -412,11 +412,11 @@ export default function BookingPage() {
       <footer className="border-t border-border bg-card mt-auto">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>© 2024 {organization.name}. Powered by AgendaMaster Pro.</p>
+            <p>© 2024 {organization.name}. Desenvolvido por AgendaMaster Pro.</p>
             <div className="flex items-center gap-4">
-              <a href="#" className="hover:text-foreground transition-smooth">Terms</a>
-              <a href="#" className="hover:text-foreground transition-smooth">Privacy</a>
-              <a href="#" className="hover:text-foreground transition-smooth">Contact</a>
+              <a href="#" className="hover:text-foreground transition-smooth">Termos</a>
+              <a href="#" className="hover:text-foreground transition-smooth">Privacidade</a>
+              <a href="#" className="hover:text-foreground transition-smooth">Contato</a>
             </div>
           </div>
         </div>

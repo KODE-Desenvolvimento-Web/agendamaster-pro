@@ -1,8 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 export type UserRole = 'super_admin' | 'org_admin' | 'staff' | 'customer';
 
-export interface User {
+export interface AppUser {
   id: string;
   name: string;
   email: string;
@@ -24,34 +26,19 @@ export interface Organization {
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
+  session: Session | null;
   organization: Organization | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, role?: UserRole) => Promise<void>;
-  logout: () => void;
+  isLoading: boolean;
+  logout: () => Promise<void>;
   switchRole: (role: UserRole) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo
-const mockUsers: Record<string, User> = {
-  super_admin: {
-    id: 'sa-001',
-    name: 'Admin Master',
-    email: 'admin@agendamaster.com',
-    role: 'super_admin',
-    avatar: undefined,
-  },
-  org_admin: {
-    id: 'oa-001',
-    name: 'Maria Santos',
-    email: 'maria@beleza.com',
-    role: 'org_admin',
-    organizationId: 'org-001',
-    organizationName: 'Beleza Total Salon',
-  },
-};
+// Default admin email
+const ADMIN_EMAIL = 'kode.dev.br@gmail.com';
 
 const mockOrganization: Organization = {
   id: 'org-001',
@@ -65,31 +52,85 @@ const mockOrganization: Organization = {
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(mockUsers.org_admin);
-  const [organization, setOrganization] = useState<Organization | null>(mockOrganization);
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = async (email: string, password: string, role: UserRole = 'org_admin') => {
-    // Simulate login
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setUser(mockUsers[role] || mockUsers.org_admin);
-    if (role !== 'super_admin') {
-      setOrganization(mockOrganization);
-    } else {
-      setOrganization(null);
-    }
+  const createAppUser = (supabaseUser: User): AppUser => {
+    const isAdmin = supabaseUser.email === ADMIN_EMAIL;
+    
+    return {
+      id: supabaseUser.id,
+      name: supabaseUser.email?.split('@')[0] || 'Usuário',
+      email: supabaseUser.email || '',
+      role: isAdmin ? 'super_admin' : 'org_admin',
+      organizationId: isAdmin ? undefined : 'org-001',
+      organizationName: isAdmin ? undefined : 'Beleza Total Salon',
+      avatar: undefined,
+    };
   };
 
-  const logout = () => {
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        
+        if (session?.user) {
+          const appUser = createAppUser(session.user);
+          setUser(appUser);
+          
+          if (appUser.role !== 'super_admin') {
+            setOrganization(mockOrganization);
+          } else {
+            setOrganization(null);
+          }
+        } else {
+          setUser(null);
+          setOrganization(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      
+      if (session?.user) {
+        const appUser = createAppUser(session.user);
+        setUser(appUser);
+        
+        if (appUser.role !== 'super_admin') {
+          setOrganization(mockOrganization);
+        } else {
+          setOrganization(null);
+        }
+      }
+      
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
     setOrganization(null);
   };
 
   const switchRole = (role: UserRole) => {
-    setUser(mockUsers[role] || mockUsers.org_admin);
-    if (role === 'super_admin') {
-      setOrganization(null);
-    } else {
-      setOrganization(mockOrganization);
+    if (user) {
+      setUser({ ...user, role });
+      if (role === 'super_admin') {
+        setOrganization(null);
+      } else {
+        setOrganization(mockOrganization);
+      }
     }
   };
 
@@ -97,9 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        session,
         organization,
-        isAuthenticated: !!user,
-        login,
+        isAuthenticated: !!session,
+        isLoading,
         logout,
         switchRole,
       }}
