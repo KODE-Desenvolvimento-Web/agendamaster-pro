@@ -1,1 +1,10 @@
 project_id = "tslywatbtqymnqmbrqnk"
+
+[functions.manage-users]
+verify_jwt = false
+
+[functions.send-notifications]
+verify_jwt = false
+
+[functions.check-booking]
+verify_jwt = false

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Bell,
   Mail,
@@ -7,7 +7,11 @@ import {
   Check,
   Plus,
   Edit2,
-  Trash2
+  Trash2,
+  AlertCircle,
+  Loader2,
+  Play,
+  RefreshCw
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -31,64 +35,94 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { useNotifications } from '@/hooks/useNotifications';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { useToast } from '@/hooks/use-toast';
 
 const notificationTemplates = [
   {
-    id: 'confirmation',
+    id: 'appointment_created',
+    name: 'Agendamento Criado',
+    description: 'Enviado imediatamente quando um agendamento é criado',
+    channels: ['email', 'whatsapp'],
+    enabled: true,
+    template: 'Olá {customer_name}! Seu agendamento de {service} em {business_name} foi recebido para {date} às {time}.',
+  },
+  {
+    id: 'appointment_confirmed',
     name: 'Agendamento Confirmado',
-    description: 'Enviado imediatamente quando um agendamento é confirmado',
+    description: 'Enviado quando um agendamento é confirmado',
     channels: ['email', 'whatsapp'],
     enabled: true,
     template: 'Olá {customer_name}! Seu agendamento de {service} em {business_name} está confirmado para {date} às {time}. Até logo!',
   },
   {
-    id: 'reminder_24h',
-    name: 'Lembrete (24h antes)',
-    description: 'Enviado 24 horas antes do agendamento',
+    id: 'appointment_reminder',
+    name: 'Lembrete',
+    description: 'Enviado antes do agendamento',
     channels: ['whatsapp'],
     enabled: true,
-    template: 'Lembrete: Você tem um agendamento amanhã às {time} para {service} em {business_name}. Responda SIM para confirmar ou ligue para reagendar.',
+    template: 'Lembrete: Você tem um agendamento às {time} para {service} em {business_name}.',
   },
   {
-    id: 'reminder_2h',
-    name: 'Lembrete (2h antes)',
-    description: 'Enviado 2 horas antes do agendamento',
-    channels: ['whatsapp'],
-    enabled: false,
-    template: 'Seu agendamento é em 2 horas! Estamos ansiosos para recebê-lo em {business_name}.',
+    id: 'appointment_cancelled',
+    name: 'Agendamento Cancelado',
+    description: 'Enviado quando um agendamento é cancelado',
+    channels: ['email', 'whatsapp'],
+    enabled: true,
+    template: 'Olá {customer_name}, seu agendamento foi cancelado. Gostaria de reagendar?',
   },
   {
-    id: 'feedback',
+    id: 'appointment_completed',
     name: 'Feedback Pós-serviço',
     description: 'Enviado após o agendamento ser concluído',
     channels: ['email'],
     enabled: true,
-    template: 'Olá {customer_name}! Obrigado por visitar {business_name}. Adoraríamos ouvir sua opinião. Avalie sua experiência: {feedback_link}',
-  },
-  {
-    id: 'no_show',
-    name: 'Acompanhamento No-Show',
-    description: 'Enviado se o cliente faltar ao agendamento',
-    channels: ['email', 'whatsapp'],
-    enabled: true,
-    template: 'Olá {customer_name}, sentimos sua falta hoje! Gostaria de reagendar seu {service}? Agende novamente: {booking_link}',
+    template: 'Olá {customer_name}! Obrigado por visitar {business_name}. Adoraríamos ouvir sua opinião.',
   },
 ];
 
 export default function NotificationsSettingsPage() {
+  const { toast } = useToast();
+  const { notifications, stats, isLoading, processNotifications, refetch } = useNotifications();
   const [templates, setTemplates] = useState(notificationTemplates);
-  const [editingTemplate, setEditingTemplate] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const toggleTemplate = (id: string) => {
     setTemplates(prev => 
       prev.map(t => t.id === id ? { ...t, enabled: !t.enabled } : t)
     );
+    toast({
+      title: 'Template atualizado',
+      description: 'As alterações foram salvas.',
+    });
+  };
+
+  const handleProcessNotifications = async () => {
+    setIsProcessing(true);
+    await processNotifications();
+    setIsProcessing(false);
   };
 
   const channelIcons = {
     email: Mail,
     whatsapp: MessageSquare,
+  };
+
+  const statusBadgeStyles = {
+    pending: 'bg-warning/10 text-warning border-warning/20',
+    sent: 'bg-success/10 text-success border-success/20',
+    failed: 'bg-destructive/10 text-destructive border-destructive/20',
+    cancelled: 'bg-muted text-muted-foreground border-border',
   };
 
   return (
@@ -103,44 +137,139 @@ export default function NotificationsSettingsPage() {
             </p>
           </div>
           
-          <Button className="bg-gradient-primary shadow-glow hover:shadow-lg transition-smooth">
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Modelo
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={refetch}
+              disabled={isLoading}
+            >
+              <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
+              Atualizar
+            </Button>
+            <Button 
+              onClick={handleProcessNotifications}
+              disabled={isProcessing || stats.pending === 0}
+              className="bg-gradient-primary shadow-glow hover:shadow-lg transition-smooth"
+            >
+              {isProcessing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="mr-2 h-4 w-4" />
+              )}
+              Processar Fila ({stats.pending})
+            </Button>
+          </div>
         </div>
 
         {/* Overview Stats */}
         <div className="grid gap-4 sm:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Mensagens Enviadas (Este Mês)</CardDescription>
+              <CardDescription>Pendentes</CardDescription>
               <CardTitle className="text-3xl flex items-center gap-2">
-                1.234
-                <Badge variant="secondary" className="text-success bg-success/10">
-                  +12%
-                </Badge>
+                {stats.pending}
+                {stats.pending > 0 && (
+                  <Badge variant="secondary" className="text-warning bg-warning/10">
+                    Aguardando
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Taxa de Entrega</CardDescription>
-              <CardTitle className="text-3xl">98,5%</CardTitle>
+              <CardDescription>Enviadas</CardDescription>
+              <CardTitle className="text-3xl text-success">{stats.sent}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Taxa de Resposta</CardDescription>
-              <CardTitle className="text-3xl">67%</CardTitle>
+              <CardDescription>Falharam</CardDescription>
+              <CardTitle className="text-3xl text-destructive">{stats.failed}</CardTitle>
             </CardHeader>
           </Card>
         </div>
+
+        {/* Recent Notifications */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
+              Notificações Recentes
+            </CardTitle>
+            <CardDescription>
+              Últimas notificações enviadas ou pendentes
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : notifications.length === 0 ? (
+              <EmptyState
+                icon={<Bell className="h-12 w-12" />}
+                title="Nenhuma notificação"
+                description="Notificações aparecerão aqui quando agendamentos forem criados"
+              />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Destinatário</TableHead>
+                    <TableHead>Template</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Data</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {notifications.slice(0, 10).map((notification) => (
+                    <TableRow key={notification.id}>
+                      <TableCell>
+                        <Badge variant="outline" className="gap-1">
+                          {notification.type === 'email' ? (
+                            <Mail className="h-3 w-3" />
+                          ) : (
+                            <MessageSquare className="h-3 w-3" />
+                          )}
+                          {notification.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {notification.recipient_email || notification.recipient_phone || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground capitalize">
+                          {notification.template.replace(/_/g, ' ')}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline" 
+                          className={cn(statusBadgeStyles[notification.status])}
+                        >
+                          {notification.status === 'pending' ? 'Pendente' :
+                           notification.status === 'sent' ? 'Enviada' :
+                           notification.status === 'failed' ? 'Falhou' : 'Cancelada'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(notification.created_at).toLocaleString('pt-BR')}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Templates */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-primary" />
+              <Edit2 className="h-5 w-5 text-primary" />
               Modelos de Notificação
             </CardTitle>
             <CardDescription>
@@ -244,22 +373,25 @@ export default function NotificationsSettingsPage() {
                 Integração WhatsApp
               </CardTitle>
               <CardDescription>
-                Conecte sua conta WhatsApp Business
+                Conecte sua conta via Evolution API
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between p-4 rounded-lg border border-success/20 bg-success/5">
+              <div className="flex items-center justify-between p-4 rounded-lg border border-warning/20 bg-warning/5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10">
-                    <Check className="h-5 w-5 text-success" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
+                    <AlertCircle className="h-5 w-5 text-warning" />
                   </div>
                   <div>
-                    <p className="font-medium">Conectado</p>
-                    <p className="text-sm text-muted-foreground">+55 11 99999-0000</p>
+                    <p className="font-medium">Não Configurado</p>
+                    <p className="text-sm text-muted-foreground">Configure as variáveis de ambiente</p>
                   </div>
                 </div>
                 <Button variant="outline" size="sm">Configurar</Button>
               </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Secrets necessários: EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE
+              </p>
             </CardContent>
           </Card>
 
@@ -270,22 +402,25 @@ export default function NotificationsSettingsPage() {
                 Configurações de Email
               </CardTitle>
               <CardDescription>
-                Configure as configurações do remetente de email
+                Configure o Resend para envio de emails
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between p-4 rounded-lg border border-primary/20 bg-primary/5">
+              <div className="flex items-center justify-between p-4 rounded-lg border border-warning/20 bg-warning/5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <Check className="h-5 w-5 text-primary" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
+                    <AlertCircle className="h-5 w-5 text-warning" />
                   </div>
                   <div>
-                    <p className="font-medium">Configurado</p>
-                    <p className="text-sm text-muted-foreground">noreply@belezatotal.com</p>
+                    <p className="font-medium">Não Configurado</p>
+                    <p className="text-sm text-muted-foreground">Configure a API key do Resend</p>
                   </div>
                 </div>
                 <Button variant="outline" size="sm">Configurar</Button>
               </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Secrets necessários: RESEND_API_KEY, RESEND_FROM_EMAIL
+              </p>
             </CardContent>
           </Card>
         </div>
