@@ -7,12 +7,13 @@ const corsHeaders = {
 
 interface Notification {
   id: string
-  type: 'email' | 'whatsapp' | 'sms'
+  channel: 'email' | 'whatsapp' | 'sms'
+  type: string
   recipient_email: string | null
   recipient_phone: string | null
   subject: string | null
   message: string
-  template: string
+  organization_id: string
 }
 
 async function sendEmail(notification: Notification): Promise<{ success: boolean; error?: string }> {
@@ -157,15 +158,18 @@ Deno.serve(async (req) => {
       notifications.map(async (notification: Notification) => {
         let result: { success: boolean; error?: string }
 
-        switch (notification.type) {
+        switch (notification.channel) {
           case 'email':
             result = await sendEmail(notification)
             break
           case 'whatsapp':
             result = await sendWhatsApp(notification)
             break
+          case 'sms':
+            result = { success: false, error: 'SMS not configured' }
+            break
           default:
-            result = { success: false, error: `Unknown notification type: ${notification.type}` }
+            result = { success: false, error: `Unknown channel: ${notification.channel}` }
         }
 
         // Update notification status
@@ -180,6 +184,7 @@ Deno.serve(async (req) => {
 
         return {
           id: notification.id,
+          channel: notification.channel,
           type: notification.type,
           ...result,
         }
