@@ -68,8 +68,8 @@ const orgAdminSettingsItems = [
 ];
 
 export function AppSidebar() {
-  const { user, organization, logout, switchRole } = useAuth();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { user, organization, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const location = useLocation();
   
   const isSuperAdmin = user?.role === 'super_admin';
@@ -221,23 +221,16 @@ export function AppSidebar() {
           </div>
         </div>
 
-        {/* Demo Role Switcher */}
-        <div className="flex items-center justify-between px-2 py-1.5 mb-2 rounded-lg bg-warning/10 border border-warning/20">
-          <span className="text-xs text-warning">Modo Demo</span>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="text-xs font-medium text-warning hover:text-warning/80 transition-smooth">
-              Trocar Papel
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => switchRole('super_admin')}>
-                Super Admin
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => switchRole('org_admin')}>
-                Admin da Org
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {/* Role Badge */}
+        {user?.role && (
+          <div className="flex items-center justify-between px-2 py-1.5 mb-2 rounded-lg bg-primary/10 border border-primary/20">
+            <span className="text-xs text-primary">
+              {user.role === 'super_admin' ? 'Super Admin' : 
+               user.role === 'org_admin' ? 'Admin' : 
+               user.role === 'staff' ? 'Funcionário' : 'Cliente'}
+            </span>
+          </div>
+        )}
 
         {/* User Menu */}
         <DropdownMenu>

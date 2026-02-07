@@ -1,14 +1,14 @@
+import { useState, useEffect } from 'react';
 import { 
   Building2, 
   DollarSign, 
   Users, 
   Calendar,
-  TrendingUp,
   ArrowUpRight,
   MoreHorizontal,
   Search,
-  Plus,
-  Filter
+  Filter,
+  Loader2
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/ui/StatCard';
@@ -29,66 +29,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { CreateOrganizationDialog } from '@/components/admin/CreateOrganizationDialog';
+import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
-// Mock data for organizations
-const organizations = [
-  {
-    id: 'org-001',
-    name: 'Beleza Total Salon',
-    slug: 'beleza-total',
-    email: 'contato@belezatotal.com',
-    status: 'active' as const,
-    plan: 'professional',
-    mrr: 299,
-    bookingsToday: 12,
-    createdAt: '2024-01-15',
-  },
-  {
-    id: 'org-002',
-    name: 'Fitness Pro Gym',
-    slug: 'fitness-pro',
-    email: 'admin@fitnesspro.com',
-    status: 'active' as const,
-    plan: 'enterprise',
-    mrr: 599,
-    bookingsToday: 34,
-    createdAt: '2024-02-20',
-  },
-  {
-    id: 'org-003',
-    name: 'Zen Spa & Wellness',
-    slug: 'zen-spa',
-    email: 'hello@zenspa.com',
-    status: 'trial' as const,
-    plan: 'starter',
-    mrr: 0,
-    bookingsToday: 5,
-    createdAt: '2024-12-01',
-  },
-  {
-    id: 'org-004',
-    name: 'Quick Cuts Barbershop',
-    slug: 'quick-cuts',
-    email: 'owner@quickcuts.com',
-    status: 'active' as const,
-    plan: 'starter',
-    mrr: 49,
-    bookingsToday: 8,
-    createdAt: '2024-06-10',
-  },
-  {
-    id: 'org-005',
-    name: 'Dental Care Plus',
-    slug: 'dental-care',
-    email: 'clinic@dentalcare.com',
-    status: 'inactive' as const,
-    plan: 'professional',
-    mrr: 0,
-    bookingsToday: 0,
-    createdAt: '2023-11-20',
-  },
-];
+interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  email: string | null;
+  status: 'active' | 'trial' | 'inactive';
+  plan: string;
+  created_at: string;
+}
 
 const statusStyles = {
   active: 'bg-success/10 text-success border-success/20',
@@ -96,21 +50,61 @@ const statusStyles = {
   inactive: 'bg-muted text-muted-foreground border-border',
 };
 
+const planPrices: Record<string, number> = {
+  free: 0,
+  starter: 49,
+  professional: 299,
+  enterprise: 599,
+};
+
 export default function SuperAdminDashboard() {
-  const totalMRR = organizations.reduce((acc, org) => acc + org.mrr, 0);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchOrganizations = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setOrganizations(data as Organization[]);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
+
+  const filteredOrganizations = organizations.filter(org =>
+    org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    org.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalMRR = organizations.reduce((acc, org) => acc + (planPrices[org.plan] || 0), 0);
   const activeOrgs = organizations.filter(org => org.status === 'active').length;
   const trialOrgs = organizations.filter(org => org.status === 'trial').length;
-  const totalBookingsToday = organizations.reduce((acc, org) => acc + org.bookingsToday, 0);
 
   return (
     <DashboardLayout>
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Painel Super Admin</h1>
-          <p className="mt-1 text-muted-foreground">
-            Monitore o desempenho da plataforma SaaS e gerencie as organizações.
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Painel Super Admin</h1>
+            <p className="mt-1 text-muted-foreground">
+              Monitore o desempenho da plataforma SaaS e gerencie as organizações.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <CreateUserDialog 
+              organizations={organizations.map(o => ({ id: o.id, name: o.name }))}
+              onUserCreated={fetchOrganizations}
+            />
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -135,8 +129,8 @@ export default function SuperAdminDashboard() {
             icon={<Users className="h-6 w-6" />}
           />
           <StatCard
-            title="Agendamentos Hoje"
-            value={totalBookingsToday}
+            title="Empresas Ativas"
+            value={activeOrgs}
             change={15}
             icon={<Calendar className="h-6 w-6" />}
             variant="success"
@@ -158,94 +152,102 @@ export default function SuperAdminDashboard() {
                 <Input 
                   placeholder="Buscar organizações..." 
                   className="pl-9 w-full sm:w-64"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <Button variant="outline" size="icon" className="shrink-0">
                 <Filter className="h-4 w-4" />
               </Button>
-              <Button className="bg-gradient-primary shadow-glow hover:shadow-lg transition-smooth">
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Organização
-              </Button>
+              <CreateOrganizationDialog onOrganizationCreated={fetchOrganizations} />
             </div>
           </div>
 
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>Organização</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Plano</TableHead>
-                  <TableHead className="text-right">MRR</TableHead>
-                  <TableHead className="text-right">Agendamentos Hoje</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {organizations.map((org) => (
-                  <TableRow key={org.id} className="group">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold">
-                          {org.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-medium">{org.name}</p>
-                          <p className="text-sm text-muted-foreground">{org.email}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant="outline" 
-                        className={cn("capitalize", statusStyles[org.status])}
-                      >
-                        {org.status === 'active' ? 'Ativo' : org.status === 'trial' ? 'Trial' : 'Inativo'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className="capitalize text-sm">{org.plan}</span>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {org.mrr > 0 ? `R$ ${org.mrr}` : '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className="inline-flex items-center gap-1">
-                        {org.bookingsToday}
-                        {org.bookingsToday > 10 && (
-                          <TrendingUp className="h-3 w-3 text-success" />
-                        )}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <ArrowUpRight className="mr-2 h-4 w-4" />
-                            Ver Detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Editar Organização</DropdownMenuItem>
-                          <DropdownMenuItem>Gerenciar Assinatura</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            Desativar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredOrganizations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium">Nenhuma organização encontrada</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {searchTerm ? 'Tente uma busca diferente' : 'Comece criando a primeira organização'}
+                </p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Organização</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Plano</TableHead>
+                    <TableHead className="text-right">MRR</TableHead>
+                    <TableHead className="text-right">Criado em</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrganizations.map((org) => (
+                    <TableRow key={org.id} className="group">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold">
+                            {org.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-medium">{org.name}</p>
+                            <p className="text-sm text-muted-foreground">{org.email || '-'}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline" 
+                          className={cn("capitalize", statusStyles[org.status])}
+                        >
+                          {org.status === 'active' ? 'Ativo' : org.status === 'trial' ? 'Trial' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="capitalize text-sm">{org.plan}</span>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {planPrices[org.plan] > 0 ? `R$ ${planPrices[org.plan]}` : '-'}
+                      </TableCell>
+                      <TableCell className="text-right text-sm text-muted-foreground">
+                        {new Date(org.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <ArrowUpRight className="mr-2 h-4 w-4" />
+                              Ver Detalhes
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>Editar Organização</DropdownMenuItem>
+                            <DropdownMenuItem>Gerenciar Assinatura</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">
+                              Desativar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </div>
       </div>
