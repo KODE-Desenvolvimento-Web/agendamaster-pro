@@ -505,6 +505,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_booking_conflict: {
+        Args: {
+          _duration: number
+          _exclude_appointment_id?: string
+          _organization_id: string
+          _scheduled_at: string
+          _staff_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
