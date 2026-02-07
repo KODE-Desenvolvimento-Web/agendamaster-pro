@@ -45,26 +45,26 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const superAdminNavItems = [
-  { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
-  { title: 'Organizations', url: '/admin/organizations', icon: Building2 },
-  { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
-  { title: 'Billing', url: '/admin/billing', icon: CreditCard },
-  { title: 'Settings', url: '/admin/settings', icon: Settings },
+  { title: 'Painel', url: '/admin', icon: LayoutDashboard },
+  { title: 'Organizações', url: '/admin/organizations', icon: Building2 },
+  { title: 'Análises', url: '/admin/analytics', icon: BarChart3 },
+  { title: 'Faturamento', url: '/admin/billing', icon: CreditCard },
+  { title: 'Configurações', url: '/admin/settings', icon: Settings },
 ];
 
 const orgAdminNavItems = [
-  { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'Calendar', url: '/calendar', icon: Calendar },
-  { title: 'Services', url: '/services', icon: Briefcase },
-  { title: 'Customers', url: '/customers', icon: Users },
-  { title: 'Reports', url: '/reports', icon: BarChart3 },
+  { title: 'Painel', url: '/dashboard', icon: LayoutDashboard },
+  { title: 'Agenda', url: '/calendar', icon: Calendar },
+  { title: 'Serviços', url: '/services', icon: Briefcase },
+  { title: 'Clientes', url: '/customers', icon: Users },
+  { title: 'Relatórios', url: '/reports', icon: BarChart3 },
 ];
 
 const orgAdminSettingsItems = [
-  { title: 'Notifications', url: '/settings/notifications', icon: Bell },
-  { title: 'Payments', url: '/settings/payments', icon: CreditCard },
-  { title: 'Branding', url: '/settings/branding', icon: Palette },
-  { title: 'General', url: '/settings', icon: Settings },
+  { title: 'Notificações', url: '/settings/notifications', icon: Bell },
+  { title: 'Pagamentos', url: '/settings/payments', icon: CreditCard },
+  { title: 'Identidade Visual', url: '/settings/branding', icon: Palette },
+  { title: 'Geral', url: '/settings', icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -122,7 +122,7 @@ export function AppSidebar() {
         {/* Main Navigation */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-muted-foreground mb-1">
-            Main Menu
+            Menu Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -155,7 +155,7 @@ export function AppSidebar() {
         {settingsItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-medium text-muted-foreground mb-1">
-              Settings
+              Configurações
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -189,7 +189,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-3 border-t border-sidebar-border">
         {/* Theme Toggle */}
         <div className="flex items-center justify-between px-2 py-1.5 mb-2">
-          <span className="text-xs text-muted-foreground">Theme</span>
+          <span className="text-xs text-muted-foreground">Tema</span>
           <div className="flex items-center gap-1 rounded-lg bg-sidebar-accent p-0.5">
             <button
               onClick={() => setTheme('light')}
@@ -223,17 +223,17 @@ export function AppSidebar() {
 
         {/* Demo Role Switcher */}
         <div className="flex items-center justify-between px-2 py-1.5 mb-2 rounded-lg bg-warning/10 border border-warning/20">
-          <span className="text-xs text-warning">Demo Mode</span>
+          <span className="text-xs text-warning">Modo Demo</span>
           <DropdownMenu>
             <DropdownMenuTrigger className="text-xs font-medium text-warning hover:text-warning/80 transition-smooth">
-              Switch Role
+              Trocar Papel
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => switchRole('super_admin')}>
                 Super Admin
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => switchRole('org_admin')}>
-                Org Admin
+                Admin da Org
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -261,20 +261,20 @@ export function AppSidebar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />
-              Settings
+              Configurações
             </DropdownMenuItem>
             <DropdownMenuItem>
               <HelpCircle className="mr-2 h-4 w-4" />
-              Help & Support
+              Ajuda & Suporte
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              Log out
+              Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

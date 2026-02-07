@@ -19,12 +19,12 @@ import {
 import { cn } from '@/lib/utils';
 
 const colorPresets = [
-  { name: 'Electric Blue', value: '#0070F3' },
-  { name: 'Purple', value: '#7C3AED' },
-  { name: 'Rose', value: '#E11D48' },
-  { name: 'Orange', value: '#F97316' },
-  { name: 'Emerald', value: '#10B981' },
-  { name: 'Cyan', value: '#06B6D4' },
+  { name: 'Azul Elétrico', value: '#0070F3' },
+  { name: 'Roxo', value: '#7C3AED' },
+  { name: 'Rosa', value: '#E11D48' },
+  { name: 'Laranja', value: '#F97316' },
+  { name: 'Esmeralda', value: '#10B981' },
+  { name: 'Ciano', value: '#06B6D4' },
 ];
 
 export default function BrandingSettingsPage() {
@@ -38,15 +38,15 @@ export default function BrandingSettingsPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Branding</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Identidade Visual</h1>
             <p className="mt-1 text-muted-foreground">
-              Customize your booking page appearance
+              Personalize a aparência da sua página de agendamento
             </p>
           </div>
           
           <Button className="bg-gradient-primary shadow-glow hover:shadow-lg transition-smooth">
             <Eye className="mr-2 h-4 w-4" />
-            Preview Booking Page
+            Visualizar Página
           </Button>
         </div>
 
@@ -59,7 +59,7 @@ export default function BrandingSettingsPage() {
                 Logo
               </CardTitle>
               <CardDescription>
-                Upload your business logo for the booking page
+                Envie o logo do seu negócio para a página de agendamento
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -69,16 +69,16 @@ export default function BrandingSettingsPage() {
                 {logo ? (
                   <div className="flex flex-col items-center gap-4">
                     <img src={logo} alt="Logo" className="h-20 object-contain" />
-                    <Button variant="outline" size="sm">Change Logo</Button>
+                    <Button variant="outline" size="sm">Alterar Logo</Button>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
                       <Upload className="h-6 w-6 text-muted-foreground" />
                     </div>
-                    <p className="font-medium">Upload Logo</p>
+                    <p className="font-medium">Enviar Logo</p>
                     <p className="text-sm text-muted-foreground">
-                      PNG, JPG or SVG. Max 2MB.
+                      PNG, JPG ou SVG. Máx 2MB.
                     </p>
                   </div>
                 )}
@@ -89,24 +89,24 @@ export default function BrandingSettingsPage() {
           {/* Business Name */}
           <Card>
             <CardHeader>
-              <CardTitle>Business Name</CardTitle>
+              <CardTitle>Nome do Negócio</CardTitle>
               <CardDescription>
-                This name will appear on your booking page
+                Este nome aparecerá na sua página de agendamento
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="businessName">Display Name</Label>
+                  <Label htmlFor="businessName">Nome de Exibição</Label>
                   <Input
                     id="businessName"
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="Your Business Name"
+                    placeholder="Nome do Seu Negócio"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="slug">Booking URL</Label>
+                  <Label htmlFor="slug">URL de Agendamento</Label>
                   <div className="flex items-center gap-0">
                     <span className="px-3 py-2 bg-muted rounded-l-md border border-r-0 border-input text-sm text-muted-foreground">
                       agendamaster.pro/book/
@@ -127,10 +127,10 @@ export default function BrandingSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Palette className="h-5 w-5 text-primary" />
-                Brand Color
+                Cor da Marca
               </CardTitle>
               <CardDescription>
-                Choose your primary brand color for buttons and accents
+                Escolha sua cor principal para botões e destaques
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -161,7 +161,7 @@ export default function BrandingSettingsPage() {
                 
                 <div className="flex items-center gap-4">
                   <div className="grid gap-2 flex-1">
-                    <Label htmlFor="customColor">Custom Color (HEX)</Label>
+                    <Label htmlFor="customColor">Cor Personalizada (HEX)</Label>
                     <div className="flex gap-2">
                       <div 
                         className="h-10 w-10 rounded-md border border-input shrink-0"
@@ -180,25 +180,25 @@ export default function BrandingSettingsPage() {
 
               {/* Preview */}
               <div className="mt-6 p-6 rounded-lg border border-border bg-muted/30">
-                <h4 className="font-medium mb-4">Preview</h4>
+                <h4 className="font-medium mb-4">Pré-visualização</h4>
                 <div className="flex flex-wrap gap-4">
                   <button
                     className="px-6 py-2 rounded-lg text-white font-medium"
                     style={{ backgroundColor: primaryColor }}
                   >
-                    Book Now
+                    Agendar Agora
                   </button>
                   <button
                     className="px-6 py-2 rounded-lg border-2 font-medium"
                     style={{ borderColor: primaryColor, color: primaryColor }}
                   >
-                    Learn More
+                    Saiba Mais
                   </button>
                   <div 
                     className="px-3 py-1 rounded-full text-white text-sm"
                     style={{ backgroundColor: primaryColor }}
                   >
-                    Badge
+                    Destaque
                   </div>
                 </div>
               </div>
@@ -208,9 +208,9 @@ export default function BrandingSettingsPage() {
 
         {/* Save Button */}
         <div className="flex justify-end gap-3">
-          <Button variant="outline">Cancel</Button>
+          <Button variant="outline">Cancelar</Button>
           <Button className="bg-gradient-primary shadow-glow">
-            Save Changes
+            Salvar Alterações
           </Button>
         </div>
       </div>

@@ -31,26 +31,26 @@ import { cn } from '@/lib/utils';
 // Mock data for charts
 const revenueData = [
   { month: 'Jan', revenue: 12500 },
-  { month: 'Feb', revenue: 15200 },
+  { month: 'Fev', revenue: 15200 },
   { month: 'Mar', revenue: 14800 },
-  { month: 'Apr', revenue: 18900 },
-  { month: 'May', revenue: 21000 },
+  { month: 'Abr', revenue: 18900 },
+  { month: 'Mai', revenue: 21000 },
   { month: 'Jun', revenue: 19500 },
 ];
 
 const serviceBreakdown = [
-  { name: 'Hair Services', value: 45, color: 'bg-primary' },
-  { name: 'Nail Services', value: 25, color: 'bg-pink-500' },
-  { name: 'Beard & Grooming', value: 20, color: 'bg-blue-500' },
-  { name: 'Spa & Wellness', value: 10, color: 'bg-green-500' },
+  { name: 'Serviços de Cabelo', value: 45, color: 'bg-primary' },
+  { name: 'Serviços de Unhas', value: 25, color: 'bg-pink-500' },
+  { name: 'Barba & Grooming', value: 20, color: 'bg-blue-500' },
+  { name: 'Spa & Bem-estar', value: 10, color: 'bg-green-500' },
 ];
 
 const topServices = [
-  { name: 'Haircut + Blowdry', bookings: 145, revenue: 21750 },
-  { name: 'Men\'s Haircut', bookings: 98, revenue: 5880 },
-  { name: 'Hair Coloring', bookings: 67, revenue: 18760 },
+  { name: 'Corte + Escova', bookings: 145, revenue: 21750 },
+  { name: 'Corte Masculino', bookings: 98, revenue: 5880 },
+  { name: 'Coloração', bookings: 67, revenue: 18760 },
   { name: 'Manicure + Pedicure', bookings: 89, revenue: 7120 },
-  { name: 'Beard Trim', bookings: 76, revenue: 3800 },
+  { name: 'Barba', bookings: 76, revenue: 3800 },
 ];
 
 export default function ReportsPage() {
@@ -62,31 +62,31 @@ export default function ReportsPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Relatórios</h1>
             <p className="mt-1 text-muted-foreground">
-              Analyze your business performance
+              Analise o desempenho do seu negócio
             </p>
           </div>
           
           <div className="flex gap-2">
             <Select defaultValue="30">
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Period" />
+                <SelectValue placeholder="Período" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="7">Last 7 days</SelectItem>
-                <SelectItem value="30">Last 30 days</SelectItem>
-                <SelectItem value="90">Last 90 days</SelectItem>
-                <SelectItem value="365">Last year</SelectItem>
+                <SelectItem value="7">Últimos 7 dias</SelectItem>
+                <SelectItem value="30">Últimos 30 dias</SelectItem>
+                <SelectItem value="90">Últimos 90 dias</SelectItem>
+                <SelectItem value="365">Último ano</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline">
               <Download className="mr-2 h-4 w-4" />
-              Export PDF
+              Exportar PDF
             </Button>
             <Button variant="outline">
               <FileText className="mr-2 h-4 w-4" />
-              Export CSV
+              Exportar CSV
             </Button>
           </div>
         </div>
@@ -94,26 +94,26 @@ export default function ReportsPage() {
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Total Revenue"
+            title="Receita Total"
             value="R$ 102.400"
             change={12.5}
             icon={<DollarSign className="h-6 w-6" />}
             variant="primary"
           />
           <StatCard
-            title="Total Bookings"
+            title="Total de Agendamentos"
             value="475"
             change={8.2}
             icon={<Calendar className="h-6 w-6" />}
           />
           <StatCard
-            title="New Customers"
+            title="Novos Clientes"
             value="48"
             change={15.3}
             icon={<Users className="h-6 w-6" />}
           />
           <StatCard
-            title="Avg. Ticket"
+            title="Ticket Médio"
             value="R$ 215"
             change={-2.1}
             icon={<TrendingUp className="h-6 w-6" />}
@@ -128,12 +128,12 @@ export default function ReportsPage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-primary" />
-                    Revenue Overview
+                    Visão Geral de Receita
                   </CardTitle>
-                  <CardDescription>Monthly revenue for the last 6 months</CardDescription>
+                  <CardDescription>Receita mensal dos últimos 6 meses</CardDescription>
                 </div>
                 <Button variant="outline" size="sm">
-                  View Details
+                  Ver Detalhes
                   <ArrowUpRight className="ml-1 h-3 w-3" />
                 </Button>
               </div>
@@ -166,9 +166,9 @@ export default function ReportsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <PieChart className="h-5 w-5 text-primary" />
-                Service Breakdown
+                Distribuição de Serviços
               </CardTitle>
-              <CardDescription>Revenue by service category</CardDescription>
+              <CardDescription>Receita por categoria de serviço</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -197,8 +197,8 @@ export default function ReportsPage() {
         {/* Top Services Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Top Performing Services</CardTitle>
-            <CardDescription>Services ranked by revenue</CardDescription>
+            <CardTitle>Serviços Mais Rentáveis</CardTitle>
+            <CardDescription>Serviços classificados por receita</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -219,7 +219,7 @@ export default function ReportsPage() {
                   <div className="flex-1">
                     <p className="font-medium">{service.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {service.bookings} bookings
+                      {service.bookings} agendamentos
                     </p>
                   </div>
                   <div className="text-right">
@@ -227,7 +227,7 @@ export default function ReportsPage() {
                       R$ {service.revenue.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      R$ {Math.round(service.revenue / service.bookings)} avg
+                      R$ {Math.round(service.revenue / service.bookings)} média
                     </p>
                   </div>
                 </div>

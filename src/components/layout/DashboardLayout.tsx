@@ -44,7 +44,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           )}
         >
           <MessageCircle className="h-5 w-5" />
-          <span className="hidden sm:inline">Support</span>
+          <span className="hidden sm:inline">Suporte</span>
         </a>
       )}
     </SidebarProvider>

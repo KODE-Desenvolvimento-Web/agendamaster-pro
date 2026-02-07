@@ -36,43 +36,43 @@ import { cn } from '@/lib/utils';
 const notificationTemplates = [
   {
     id: 'confirmation',
-    name: 'Appointment Confirmed',
-    description: 'Sent immediately when a booking is confirmed',
+    name: 'Agendamento Confirmado',
+    description: 'Enviado imediatamente quando um agendamento é confirmado',
     channels: ['email', 'whatsapp'],
     enabled: true,
-    template: 'Hi {customer_name}! Your appointment for {service} at {business_name} is confirmed for {date} at {time}. See you soon!',
+    template: 'Olá {customer_name}! Seu agendamento de {service} em {business_name} está confirmado para {date} às {time}. Até logo!',
   },
   {
     id: 'reminder_24h',
-    name: 'Reminder (24h before)',
-    description: 'Sent 24 hours before the appointment',
+    name: 'Lembrete (24h antes)',
+    description: 'Enviado 24 horas antes do agendamento',
     channels: ['whatsapp'],
     enabled: true,
-    template: 'Reminder: You have an appointment tomorrow at {time} for {service} at {business_name}. Reply YES to confirm or call us to reschedule.',
+    template: 'Lembrete: Você tem um agendamento amanhã às {time} para {service} em {business_name}. Responda SIM para confirmar ou ligue para reagendar.',
   },
   {
     id: 'reminder_2h',
-    name: 'Reminder (2h before)',
-    description: 'Sent 2 hours before the appointment',
+    name: 'Lembrete (2h antes)',
+    description: 'Enviado 2 horas antes do agendamento',
     channels: ['whatsapp'],
     enabled: false,
-    template: 'Your appointment is in 2 hours! We\'re looking forward to seeing you at {business_name}.',
+    template: 'Seu agendamento é em 2 horas! Estamos ansiosos para recebê-lo em {business_name}.',
   },
   {
     id: 'feedback',
-    name: 'Post-service Feedback',
-    description: 'Sent after the appointment is completed',
+    name: 'Feedback Pós-serviço',
+    description: 'Enviado após o agendamento ser concluído',
     channels: ['email'],
     enabled: true,
-    template: 'Hi {customer_name}! Thank you for visiting {business_name}. We\'d love to hear your feedback. Rate your experience: {feedback_link}',
+    template: 'Olá {customer_name}! Obrigado por visitar {business_name}. Adoraríamos ouvir sua opinião. Avalie sua experiência: {feedback_link}',
   },
   {
     id: 'no_show',
-    name: 'No-show Follow-up',
-    description: 'Sent if customer misses their appointment',
+    name: 'Acompanhamento No-Show',
+    description: 'Enviado se o cliente faltar ao agendamento',
     channels: ['email', 'whatsapp'],
     enabled: true,
-    template: 'Hi {customer_name}, we missed you today! Would you like to reschedule your {service} appointment? Book again: {booking_link}',
+    template: 'Olá {customer_name}, sentimos sua falta hoje! Gostaria de reagendar seu {service}? Agende novamente: {booking_link}',
   },
 ];
 
@@ -97,15 +97,15 @@ export default function NotificationsSettingsPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Notificações</h1>
             <p className="mt-1 text-muted-foreground">
-              Configure automated messages for your customers
+              Configure mensagens automáticas para seus clientes
             </p>
           </div>
           
           <Button className="bg-gradient-primary shadow-glow hover:shadow-lg transition-smooth">
             <Plus className="mr-2 h-4 w-4" />
-            New Template
+            Novo Modelo
           </Button>
         </div>
 
@@ -113,9 +113,9 @@ export default function NotificationsSettingsPage() {
         <div className="grid gap-4 sm:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Messages Sent (This Month)</CardDescription>
+              <CardDescription>Mensagens Enviadas (Este Mês)</CardDescription>
               <CardTitle className="text-3xl flex items-center gap-2">
-                1,234
+                1.234
                 <Badge variant="secondary" className="text-success bg-success/10">
                   +12%
                 </Badge>
@@ -124,13 +124,13 @@ export default function NotificationsSettingsPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Delivery Rate</CardDescription>
-              <CardTitle className="text-3xl">98.5%</CardTitle>
+              <CardDescription>Taxa de Entrega</CardDescription>
+              <CardTitle className="text-3xl">98,5%</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Response Rate</CardDescription>
+              <CardDescription>Taxa de Resposta</CardDescription>
               <CardTitle className="text-3xl">67%</CardTitle>
             </CardHeader>
           </Card>
@@ -141,10 +141,10 @@ export default function NotificationsSettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5 text-primary" />
-              Notification Templates
+              Modelos de Notificação
             </CardTitle>
             <CardDescription>
-              Customize the messages sent to your customers
+              Personalize as mensagens enviadas aos seus clientes
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -197,14 +197,14 @@ export default function NotificationsSettingsPage() {
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Edit Template</DialogTitle>
+                            <DialogTitle>Editar Modelo</DialogTitle>
                             <DialogDescription>
-                              Customize the message for "{template.name}"
+                              Personalize a mensagem para "{template.name}"
                             </DialogDescription>
                           </DialogHeader>
                           <div className="py-4">
                             <Label htmlFor="template" className="mb-2 block">
-                              Message Template
+                              Modelo de Mensagem
                             </Label>
                             <Textarea
                               id="template"
@@ -213,12 +213,12 @@ export default function NotificationsSettingsPage() {
                               className="font-mono text-sm"
                             />
                             <p className="text-xs text-muted-foreground mt-2">
-                              Available variables: {'{customer_name}'}, {'{service}'}, {'{date}'}, {'{time}'}, {'{business_name}'}
+                              Variáveis disponíveis: {'{customer_name}'}, {'{service}'}, {'{date}'}, {'{time}'}, {'{business_name}'}
                             </p>
                           </div>
                           <DialogFooter>
-                            <Button variant="outline">Cancel</Button>
-                            <Button className="bg-gradient-primary">Save Changes</Button>
+                            <Button variant="outline">Cancelar</Button>
+                            <Button className="bg-gradient-primary">Salvar Alterações</Button>
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
@@ -241,10 +241,10 @@ export default function NotificationsSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-success" />
-                WhatsApp Integration
+                Integração WhatsApp
               </CardTitle>
               <CardDescription>
-                Connect your WhatsApp Business account
+                Conecte sua conta WhatsApp Business
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -254,11 +254,11 @@ export default function NotificationsSettingsPage() {
                     <Check className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <p className="font-medium">Connected</p>
+                    <p className="font-medium">Conectado</p>
                     <p className="text-sm text-muted-foreground">+55 11 99999-0000</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">Configure</Button>
+                <Button variant="outline" size="sm">Configurar</Button>
               </div>
             </CardContent>
           </Card>
@@ -267,10 +267,10 @@ export default function NotificationsSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Mail className="h-5 w-5 text-primary" />
-                Email Settings
+                Configurações de Email
               </CardTitle>
               <CardDescription>
-                Configure your email sender settings
+                Configure as configurações do remetente de email
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -280,11 +280,11 @@ export default function NotificationsSettingsPage() {
                     <Check className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">Configured</p>
+                    <p className="font-medium">Configurado</p>
                     <p className="text-sm text-muted-foreground">noreply@belezatotal.com</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">Configure</Button>
+                <Button variant="outline" size="sm">Configurar</Button>
               </div>
             </CardContent>
           </Card>

@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 // Pages
+import AuthPage from "./pages/auth/AuthPage";
 import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 import OrgDashboard from "./pages/dashboard/OrgDashboard";
 import CalendarPage from "./pages/calendar/CalendarPage";
@@ -20,15 +21,54 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Redirect component based on user role
-function RoleBasedRedirect() {
-  const { user } = useAuth();
+// Protected Route wrapper
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
   
-  if (!user) {
-    return <OrgDashboard />;
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-primary mx-auto mb-4 animate-pulse-glow">
+            <span className="text-primary-foreground font-bold text-xl">A</span>
+          </div>
+          <h1 className="text-2xl font-bold">AgendaMaster Pro</h1>
+          <p className="text-muted-foreground mt-2">Carregando...</p>
+        </div>
+      </div>
+    );
   }
   
-  if (user.role === 'super_admin') {
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+  
+  return <>{children}</>;
+}
+
+// Redirect component based on user role
+function RoleBasedRedirect() {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-primary mx-auto mb-4 animate-pulse-glow">
+            <span className="text-primary-foreground font-bold text-xl">A</span>
+          </div>
+          <h1 className="text-2xl font-bold">AgendaMaster Pro</h1>
+          <p className="text-muted-foreground mt-2">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+  
+  if (user?.role === 'super_admin') {
     return <Navigate to="/admin" replace />;
   }
   
@@ -44,28 +84,31 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
+              {/* Auth Page */}
+              <Route path="/auth" element={<AuthPage />} />
+              
               {/* Default redirect */}
               <Route path="/" element={<RoleBasedRedirect />} />
               
               {/* Super Admin Routes */}
-              <Route path="/admin" element={<SuperAdminDashboard />} />
-              <Route path="/admin/organizations" element={<SuperAdminDashboard />} />
-              <Route path="/admin/analytics" element={<SuperAdminDashboard />} />
-              <Route path="/admin/billing" element={<SuperAdminDashboard />} />
-              <Route path="/admin/settings" element={<SuperAdminDashboard />} />
+              <Route path="/admin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/organizations" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/analytics" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/billing" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/settings" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
               
               {/* Organization Admin Routes */}
-              <Route path="/dashboard" element={<OrgDashboard />} />
-              <Route path="/calendar" element={<CalendarPage />} />
-              <Route path="/services" element={<ServicesPage />} />
-              <Route path="/customers" element={<CustomersPage />} />
-              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/dashboard" element={<ProtectedRoute><OrgDashboard /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
+              <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
+              <Route path="/customers" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
               
               {/* Settings Routes */}
-              <Route path="/settings" element={<BrandingSettingsPage />} />
-              <Route path="/settings/notifications" element={<NotificationsSettingsPage />} />
-              <Route path="/settings/payments" element={<BrandingSettingsPage />} />
-              <Route path="/settings/branding" element={<BrandingSettingsPage />} />
+              <Route path="/settings" element={<ProtectedRoute><BrandingSettingsPage /></ProtectedRoute>} />
+              <Route path="/settings/notifications" element={<ProtectedRoute><NotificationsSettingsPage /></ProtectedRoute>} />
+              <Route path="/settings/payments" element={<ProtectedRoute><BrandingSettingsPage /></ProtectedRoute>} />
+              <Route path="/settings/branding" element={<ProtectedRoute><BrandingSettingsPage /></ProtectedRoute>} />
               
               {/* Public Booking Page */}
               <Route path="/book/:slug" element={<BookingPage />} />

@@ -129,7 +129,7 @@ export default function CustomersPage() {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    return new Date(dateStr).toLocaleDateString('pt-BR', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -142,9 +142,9 @@ export default function CustomersPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
             <p className="mt-1 text-muted-foreground">
-              Manage your customer database and track their history
+              Gerencie sua base de clientes e histórico
             </p>
           </div>
           
@@ -152,36 +152,36 @@ export default function CustomersPage() {
             <DialogTrigger asChild>
               <Button className="bg-gradient-primary shadow-glow hover:shadow-lg transition-smooth">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Customer
+                Adicionar Cliente
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Add New Customer</DialogTitle>
+                <DialogTitle>Adicionar Novo Cliente</DialogTitle>
                 <DialogDescription>
-                  Add a new customer to your database.
+                  Adicione um novo cliente ao seu banco de dados.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" placeholder="e.g., Maria Santos" />
+                  <Label htmlFor="name">Nome Completo</Label>
+                  <Input id="name" placeholder="ex.: Maria Santos" />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="email@example.com" />
+                  <Input id="email" type="email" placeholder="email@exemplo.com" />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">Telefone</Label>
                   <Input id="phone" type="tel" placeholder="+55 11 99999-9999" />
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button className="bg-gradient-primary" onClick={() => setIsDialogOpen(false)}>
-                  Add Customer
+                  Adicionar Cliente
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -192,13 +192,13 @@ export default function CustomersPage() {
         <div className="grid gap-4 sm:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Total Customers</CardDescription>
+              <CardDescription>Total de Clientes</CardDescription>
               <CardTitle className="text-3xl">{customers.length}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>VIP Customers</CardDescription>
+              <CardDescription>Clientes VIP</CardDescription>
               <CardTitle className="text-3xl flex items-center gap-2">
                 {customers.filter(c => c.isVIP).length}
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
@@ -207,7 +207,7 @@ export default function CustomersPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>No-Show Rate</CardDescription>
+              <CardDescription>Taxa de No-Show</CardDescription>
               <CardTitle className="text-3xl text-destructive">
                 {Math.round((customers.filter(c => c.noShows > 0).length / customers.length) * 100)}%
               </CardTitle>
@@ -220,16 +220,16 @@ export default function CustomersPage() {
           <CardHeader>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <CardTitle>Customer Database</CardTitle>
+                <CardTitle>Base de Clientes</CardTitle>
                 <CardDescription>
-                  A list of all your registered customers
+                  Lista de todos os seus clientes cadastrados
                 </CardDescription>
               </div>
               <div className="flex gap-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input 
-                    placeholder="Search customers..." 
+                    placeholder="Buscar clientes..." 
                     className="pl-9 w-full sm:w-64"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -246,13 +246,13 @@ export default function CustomersPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead className="text-center">Visits</TableHead>
-                    <TableHead className="text-right">Total Spent</TableHead>
-                    <TableHead>Last Visit</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Contato</TableHead>
+                    <TableHead className="text-center">Visitas</TableHead>
+                    <TableHead className="text-right">Total Gasto</TableHead>
+                    <TableHead>Última Visita</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -273,7 +273,7 @@ export default function CustomersPage() {
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              Since {formatDate(customer.createdAt)}
+                              Desde {formatDate(customer.createdAt)}
                             </p>
                           </div>
                         </div>
@@ -309,14 +309,14 @@ export default function CustomersPage() {
                             className="gap-1 bg-destructive/10 text-destructive border-destructive/20"
                           >
                             <AlertTriangle className="h-3 w-3" />
-                            {customer.noShows} No-show{customer.noShows > 1 ? 's' : ''}
+                            {customer.noShows} Falta{customer.noShows > 1 ? 's' : ''}
                           </Badge>
                         ) : (
                           <Badge 
                             variant="outline" 
                             className="bg-success/10 text-success border-success/20"
                           >
-                            Good standing
+                            Regular
                           </Badge>
                         )}
                       </TableCell>
@@ -334,16 +334,16 @@ export default function CustomersPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>
                               <ArrowUpRight className="mr-2 h-4 w-4" />
-                              View Profile
+                              Ver Perfil
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Calendar className="mr-2 h-4 w-4" />
-                              Book Appointment
+                              Agendar
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>Edit Customer</DropdownMenuItem>
+                            <DropdownMenuItem>Editar Cliente</DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive">
-                              Delete
+                              Excluir
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
