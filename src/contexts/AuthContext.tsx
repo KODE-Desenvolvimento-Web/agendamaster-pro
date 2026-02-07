@@ -48,56 +48,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Buscar role do banco de dados
       const { data: roleData } = await supabase
         .from('user_roles')
-        .select(`
-          role,
-          organization_id,
-          organizations(id, name, slug, logo_url, primary_color, status, plan, created_at)
-        `)
+        .select('role, organization_id')
         .eq('user_id', supabaseUser.id)
-        .limit(1)
-        .single();
+        .maybeSingle();
 
       // Buscar perfil
       const { data: profileData } = await supabase
         .from('profiles')
         .select('full_name, avatar_url')
         .eq('user_id', supabaseUser.id)
-        .single();
+        .maybeSingle();
+
+      // Se tiver organization_id, buscar organização separadamente
+      let orgData = null;
+      if (roleData?.organization_id) {
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('id, name, slug, logo_url, primary_color, status, plan, created_at')
+          .eq('id', roleData.organization_id)
+          .maybeSingle();
+        orgData = org;
+      }
 
       if (roleData) {
-        const org = roleData.organizations as {
-          id: string;
-          name: string;
-          slug: string;
-          logo_url: string | null;
-          primary_color: string | null;
-          status: string;
-          plan: string;
-          created_at: string;
-        } | null;
-
         const appUser: AppUser = {
           id: supabaseUser.id,
           name: profileData?.full_name || supabaseUser.email?.split('@')[0] || 'Usuário',
           email: supabaseUser.email || '',
           role: roleData.role as UserRole,
           organizationId: roleData.organization_id || undefined,
-          organizationName: org?.name || undefined,
+          organizationName: orgData?.name || undefined,
           avatar: profileData?.avatar_url || undefined,
         };
 
         setUser(appUser);
 
-        if (org) {
+        if (orgData) {
           setOrganization({
-            id: org.id,
-            name: org.name,
-            slug: org.slug,
-            logo: org.logo_url || undefined,
-            primaryColor: org.primary_color || '#0070F3',
-            status: org.status as 'active' | 'trial' | 'inactive',
-            plan: org.plan as 'free' | 'starter' | 'professional' | 'enterprise',
-            createdAt: new Date(org.created_at),
+            id: orgData.id,
+            name: orgData.name,
+            slug: orgData.slug,
+            logo: orgData.logo_url || undefined,
+            primaryColor: orgData.primary_color || '#0070F3',
+            status: orgData.status as 'active' | 'trial' | 'inactive',
+            plan: orgData.plan as 'free' | 'starter' | 'professional' | 'enterprise',
+            createdAt: new Date(orgData.created_at),
           });
         } else {
           setOrganization(null);

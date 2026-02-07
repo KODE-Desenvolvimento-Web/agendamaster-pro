@@ -25,27 +25,32 @@ export function useUserRole(user: User | null) {
       try {
         const { data: roles, error } = await supabase
           .from('user_roles')
-          .select(`
-            role,
-            organization_id,
-            organizations(name)
-          `)
+          .select('role, organization_id')
           .eq('user_id', user.id)
-          .limit(1)
-          .single();
+          .maybeSingle();
 
         if (error || !roles) {
-          // Usuário sem role ainda - considerar como customer
           setRoleData({
             role: 'customer',
             organizationId: null,
             organizationName: null,
           });
         } else {
+          // Buscar nome da organização separadamente se existir
+          let orgName: string | null = null;
+          if (roles.organization_id) {
+            const { data: org } = await supabase
+              .from('organizations')
+              .select('name')
+              .eq('id', roles.organization_id)
+              .maybeSingle();
+            orgName = org?.name || null;
+          }
+
           setRoleData({
             role: roles.role as UserRole,
             organizationId: roles.organization_id,
-            organizationName: (roles.organizations as { name: string } | null)?.name || null,
+            organizationName: orgName,
           });
         }
       } catch (err) {
