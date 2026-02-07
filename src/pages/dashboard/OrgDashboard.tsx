@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { 
   Calendar, 
   DollarSign, 
@@ -8,13 +9,15 @@ import {
   MoreHorizontal,
   UserX,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/ui/StatCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Card,
   CardContent,
@@ -22,79 +25,66 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { useAppointments, AppointmentStatus } from '@/hooks/useAppointments';
+import { useCustomers } from '@/hooks/useCustomers';
+import { format } from 'date-fns';
+import { EmptyState } from '@/components/ui/EmptyState';
 
-// Mock data for today's appointments
-const todaysAppointments = [
-  {
-    id: '1',
-    time: '09:00',
-    customer: 'Ana Silva',
-    service: 'Corte + Escova',
-    duration: 90,
-    status: 'confirmed' as const,
-    price: 150,
-  },
-  {
-    id: '2',
-    time: '10:30',
-    customer: 'Carlos Mendes',
-    service: 'Barba',
-    duration: 30,
-    status: 'confirmed' as const,
-    price: 50,
-  },
-  {
-    id: '3',
-    time: '11:00',
-    customer: 'Beatriz Oliveira',
-    service: 'Manicure + Pedicure',
-    duration: 60,
-    status: 'pending' as const,
-    price: 80,
-  },
-  {
-    id: '4',
-    time: '14:00',
-    customer: 'Roberto Santos',
-    service: 'Corte Masculino',
-    duration: 45,
-    status: 'confirmed' as const,
-    price: 60,
-  },
-  {
-    id: '5',
-    time: '15:00',
-    customer: 'Juliana Costa',
-    service: 'Coloração',
-    duration: 120,
-    status: 'no_show' as const,
-    price: 280,
-  },
-];
-
-// Mock data for top customers
-const topCustomers = [
-  { id: '1', name: 'Maria Fernanda', visits: 24, spent: 3600, avatar: undefined },
-  { id: '2', name: 'João Pedro', visits: 18, spent: 1440, avatar: undefined },
-  { id: '3', name: 'Carolina Lima', visits: 15, spent: 2250, avatar: undefined },
-  { id: '4', name: 'Lucas Almeida', visits: 12, spent: 960, avatar: undefined },
-];
-
-const statusConfig = {
+const statusConfig: Record<AppointmentStatus, { label: string; icon: typeof CheckCircle2; className: string }> = {
   confirmed: { label: 'Confirmado', icon: CheckCircle2, className: 'text-success bg-success/10' },
   pending: { label: 'Pendente', icon: Clock, className: 'text-warning bg-warning/10' },
   no_show: { label: 'Não Compareceu', icon: XCircle, className: 'text-destructive bg-destructive/10' },
   cancelled: { label: 'Cancelado', icon: XCircle, className: 'text-muted-foreground bg-muted' },
+  completed: { label: 'Concluído', icon: CheckCircle2, className: 'text-primary bg-primary/10' },
 };
 
 export default function OrgDashboard() {
-  const confirmedAppointments = todaysAppointments.filter(a => a.status === 'confirmed').length;
-  const pendingAppointments = todaysAppointments.filter(a => a.status === 'pending').length;
-  const todayRevenue = todaysAppointments
-    .filter(a => a.status === 'confirmed')
-    .reduce((acc, a) => acc + a.price, 0);
+  const { 
+    appointments, 
+    isLoading: appointmentsLoading,
+    todayStats,
+    updateStatus
+  } = useAppointments();
+  
+  const { 
+    customers, 
+    isLoading: customersLoading 
+  } = useCustomers();
+
+  const isLoading = appointmentsLoading || customersLoading;
+
+  // Top customers by total spent
+  const topCustomers = useMemo(() => {
+    return [...customers]
+      .sort((a, b) => Number(b.total_spent) - Number(a.total_spent))
+      .slice(0, 4);
+  }, [customers]);
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const handleStatusChange = async (appointmentId: string, newStatus: AppointmentStatus) => {
+    await updateStatus(appointmentId, newStatus);
+  };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -126,25 +116,24 @@ export default function OrgDashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
           <StatCard
             title="Agendamentos Hoje"
-            value={todaysAppointments.length}
+            value={todayStats.total}
             icon={<Calendar className="h-6 w-6" />}
           />
           <StatCard
             title="Confirmados"
-            value={confirmedAppointments}
+            value={todayStats.confirmed}
             icon={<CheckCircle2 className="h-6 w-6" />}
             variant="success"
           />
           <StatCard
             title="Aguardando Confirmação"
-            value={pendingAppointments}
+            value={todayStats.pending}
             icon={<Clock className="h-6 w-6" />}
             variant="warning"
           />
           <StatCard
             title="Receita de Hoje"
-            value={`R$ ${todayRevenue}`}
-            change={12}
+            value={`R$ ${todayStats.revenue.toFixed(2)}`}
             icon={<DollarSign className="h-6 w-6" />}
             variant="primary"
           />
@@ -174,58 +163,93 @@ export default function OrgDashboard() {
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {todaysAppointments.map((appointment) => {
-                  const status = statusConfig[appointment.status];
-                  const StatusIcon = status.icon;
-                  
-                  return (
-                    <div
-                      key={appointment.id}
-                      className={cn(
-                        "flex items-center gap-4 rounded-lg border border-border p-4 transition-smooth hover:bg-accent/50",
-                        appointment.status === 'no_show' && "opacity-60"
-                      )}
-                    >
-                      <div className="text-center min-w-[60px]">
-                        <p className="text-lg font-bold">{appointment.time}</p>
-                        <p className="text-xs text-muted-foreground">{appointment.duration}min</p>
-                      </div>
-                      
-                      <div className="h-12 w-px bg-border" />
-                      
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
-                          {appointment.customer.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{appointment.customer}</p>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {appointment.service}
-                        </p>
-                      </div>
-                      
-                      <div className="text-right hidden sm:block">
-                        <p className="font-medium">R$ {appointment.price}</p>
-                      </div>
-                      
-                      <Badge 
-                        variant="secondary"
-                        className={cn("gap-1 shrink-0", status.className)}
+              {appointments.length === 0 ? (
+                <EmptyState
+                  icon={<Calendar className="h-6 w-6 text-muted-foreground" />}
+                  title="Nenhum agendamento hoje"
+                  description="Comece a agendar para ver os compromissos aqui"
+                  action={{
+                    label: "Criar Agendamento",
+                    onClick: () => window.location.href = '/calendar'
+                  }}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {appointments.slice(0, 5).map((appointment) => {
+                    const status = statusConfig[appointment.status];
+                    const StatusIcon = status.icon;
+                    const time = format(new Date(appointment.scheduled_at), 'HH:mm');
+                    
+                    return (
+                      <div
+                        key={appointment.id}
+                        className={cn(
+                          "flex items-center gap-4 rounded-lg border border-border p-4 transition-smooth hover:bg-accent/50",
+                          (appointment.status === 'no_show' || appointment.status === 'cancelled') && "opacity-60"
+                        )}
                       >
-                        <StatusIcon className="h-3 w-3" />
-                        <span className="hidden sm:inline">{status.label}</span>
-                      </Badge>
-                      
-                      <Button variant="ghost" size="icon" className="shrink-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
+                        <div className="text-center min-w-[60px]">
+                          <p className="text-lg font-bold">{time}</p>
+                          <p className="text-xs text-muted-foreground">{appointment.duration}min</p>
+                        </div>
+                        
+                        <div className="h-12 w-px bg-border" />
+                        
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                            {appointment.customer ? getInitials(appointment.customer.name) : '??'}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{appointment.customer?.name || 'Cliente'}</p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {appointment.service?.name || 'Serviço'}
+                          </p>
+                        </div>
+                        
+                        <div className="text-right hidden sm:block">
+                          <p className="font-medium">R$ {Number(appointment.price).toFixed(2)}</p>
+                        </div>
+                        
+                        <Badge 
+                          variant="secondary"
+                          className={cn("gap-1 shrink-0", status.className)}
+                        >
+                          <StatusIcon className="h-3 w-3" />
+                          <span className="hidden sm:inline">{status.label}</span>
+                        </Badge>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="shrink-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleStatusChange(appointment.id, 'confirmed')}>
+                              <CheckCircle2 className="mr-2 h-4 w-4 text-success" />
+                              Confirmar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(appointment.id, 'completed')}>
+                              <CheckCircle2 className="mr-2 h-4 w-4 text-primary" />
+                              Concluir
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(appointment.id, 'no_show')}>
+                              <XCircle className="mr-2 h-4 w-4 text-destructive" />
+                              Não Compareceu
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(appointment.id, 'cancelled')}>
+                              <AlertCircle className="mr-2 h-4 w-4 text-muted-foreground" />
+                              Cancelar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -236,42 +260,48 @@ export default function OrgDashboard() {
                 <Users className="h-5 w-5 text-primary" />
                 Melhores Clientes
               </CardTitle>
-              <CardDescription>Clientes mais ativos do mês</CardDescription>
+              <CardDescription>Clientes por total gasto</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {topCustomers.map((customer, index) => (
-                  <div
-                    key={customer.id}
-                    className="flex items-center gap-3"
-                  >
-                    <div className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold",
-                      index === 0 && "bg-yellow-500/10 text-yellow-600",
-                      index === 1 && "bg-gray-400/10 text-gray-500",
-                      index === 2 && "bg-amber-600/10 text-amber-700",
-                      index > 2 && "bg-muted text-muted-foreground"
-                    )}>
-                      {index + 1}
-                    </div>
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={customer.avatar} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                        {customer.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{customer.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {customer.visits} visitas
+              {topCustomers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Nenhum cliente cadastrado</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {topCustomers.map((customer, index) => (
+                    <div
+                      key={customer.id}
+                      className="flex items-center gap-3"
+                    >
+                      <div className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold",
+                        index === 0 && "bg-yellow-500/10 text-yellow-600",
+                        index === 1 && "bg-gray-400/10 text-gray-500",
+                        index === 2 && "bg-amber-600/10 text-amber-700",
+                        index > 2 && "bg-muted text-muted-foreground"
+                      )}>
+                        {index + 1}
+                      </div>
+                      <Avatar className="h-9 w-9">
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {getInitials(customer.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{customer.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {customer.total_visits} visitas
+                        </p>
+                      </div>
+                      <p className="text-sm font-medium text-success">
+                        R$ {Number(customer.total_spent).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                     </div>
-                    <p className="text-sm font-medium text-success">
-                      R$ {customer.spent.toLocaleString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
               
               <Button variant="outline" className="w-full mt-4" asChild>
                 <Link to="/customers">

@@ -6,7 +6,7 @@ interface EmptyStateProps {
   icon?: ReactNode;
   title: string;
   description: string;
-  action?: {
+  action?: ReactNode | {
     label: string;
     onClick: () => void;
   };
@@ -20,6 +20,23 @@ export function EmptyState({
   action,
   className,
 }: EmptyStateProps) {
+  const renderAction = () => {
+    if (!action) return null;
+    
+    // Check if action is an object with label/onClick properties
+    if (typeof action === 'object' && action !== null && 'label' in action && 'onClick' in action) {
+      const actionObj = action as { label: string; onClick: () => void };
+      return (
+        <Button onClick={actionObj.onClick} className="mt-6">
+          {actionObj.label}
+        </Button>
+      );
+    }
+    
+    // It's a ReactNode
+    return <div className="mt-6">{action as ReactNode}</div>;
+  };
+
   return (
     <div
       className={cn(
@@ -34,11 +51,7 @@ export function EmptyState({
       )}
       <h3 className="text-lg font-semibold text-foreground">{title}</h3>
       <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
-      {action && (
-        <Button onClick={action.onClick} className="mt-6">
-          {action.label}
-        </Button>
-      )}
+      {renderAction()}
     </div>
   );
 }
