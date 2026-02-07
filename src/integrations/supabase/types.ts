@@ -185,6 +185,78 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          appointment_id: string | null
+          channel: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          message: string
+          organization_id: string
+          recipient_email: string | null
+          recipient_phone: string | null
+          retry_count: number | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          channel: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          message: string
+          organization_id: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          retry_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          channel?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          message?: string
+          organization_id?: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          retry_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
@@ -197,6 +269,7 @@ export type Database = {
           primary_color: string | null
           slug: string
           status: string
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
@@ -210,6 +283,7 @@ export type Database = {
           primary_color?: string | null
           slug: string
           status?: string
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -223,6 +297,7 @@ export type Database = {
           primary_color?: string | null
           slug?: string
           status?: string
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: []
