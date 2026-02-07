@@ -32,24 +32,10 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   logout: () => Promise<void>;
-  switchRole: (role: UserRole) => void;
+  refetchUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Default admin email
-const ADMIN_EMAIL = 'kode.dev.br@gmail.com';
-
-const mockOrganization: Organization = {
-  id: 'org-001',
-  name: 'Beleza Total Salon',
-  slug: 'beleza-total',
-  logo: undefined,
-  primaryColor: '#0070F3',
-  status: 'active',
-  plan: 'professional',
-  createdAt: new Date('2024-01-15'),
-};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
@@ -57,60 +43,118 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const createAppUser = (supabaseUser: User): AppUser => {
-    const isAdmin = supabaseUser.email === ADMIN_EMAIL;
-    
-    return {
-      id: supabaseUser.id,
-      name: supabaseUser.email?.split('@')[0] || 'Usuário',
-      email: supabaseUser.email || '',
-      role: isAdmin ? 'super_admin' : 'org_admin',
-      organizationId: isAdmin ? undefined : 'org-001',
-      organizationName: isAdmin ? undefined : 'Beleza Total Salon',
-      avatar: undefined,
-    };
+  const fetchUserData = async (supabaseUser: User) => {
+    try {
+      // Buscar role do banco de dados
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select(`
+          role,
+          organization_id,
+          organizations(id, name, slug, logo_url, primary_color, status, plan, created_at)
+        `)
+        .eq('user_id', supabaseUser.id)
+        .limit(1)
+        .single();
+
+      // Buscar perfil
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('user_id', supabaseUser.id)
+        .single();
+
+      if (roleData) {
+        const org = roleData.organizations as {
+          id: string;
+          name: string;
+          slug: string;
+          logo_url: string | null;
+          primary_color: string | null;
+          status: string;
+          plan: string;
+          created_at: string;
+        } | null;
+
+        const appUser: AppUser = {
+          id: supabaseUser.id,
+          name: profileData?.full_name || supabaseUser.email?.split('@')[0] || 'Usuário',
+          email: supabaseUser.email || '',
+          role: roleData.role as UserRole,
+          organizationId: roleData.organization_id || undefined,
+          organizationName: org?.name || undefined,
+          avatar: profileData?.avatar_url || undefined,
+        };
+
+        setUser(appUser);
+
+        if (org) {
+          setOrganization({
+            id: org.id,
+            name: org.name,
+            slug: org.slug,
+            logo: org.logo_url || undefined,
+            primaryColor: org.primary_color || '#0070F3',
+            status: org.status as 'active' | 'trial' | 'inactive',
+            plan: org.plan as 'free' | 'starter' | 'professional' | 'enterprise',
+            createdAt: new Date(org.created_at),
+          });
+        } else {
+          setOrganization(null);
+        }
+      } else {
+        // Usuário sem role - criar perfil básico
+        const appUser: AppUser = {
+          id: supabaseUser.id,
+          name: profileData?.full_name || supabaseUser.email?.split('@')[0] || 'Usuário',
+          email: supabaseUser.email || '',
+          role: 'customer',
+          avatar: profileData?.avatar_url || undefined,
+        };
+        setUser(appUser);
+        setOrganization(null);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados do usuário:', error);
+      // Fallback para dados básicos
+      setUser({
+        id: supabaseUser.id,
+        name: supabaseUser.email?.split('@')[0] || 'Usuário',
+        email: supabaseUser.email || '',
+        role: 'customer',
+      });
+      setOrganization(null);
+    }
   };
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
+      (event, currentSession) => {
+        setSession(currentSession);
         
-        if (session?.user) {
-          const appUser = createAppUser(session.user);
-          setUser(appUser);
-          
-          if (appUser.role !== 'super_admin') {
-            setOrganization(mockOrganization);
-          } else {
-            setOrganization(null);
-          }
+        if (currentSession?.user) {
+          // Usar setTimeout para evitar deadlock
+          setTimeout(() => {
+            fetchUserData(currentSession.user).finally(() => setIsLoading(false));
+          }, 0);
         } else {
           setUser(null);
           setOrganization(null);
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      setSession(existingSession);
       
-      if (session?.user) {
-        const appUser = createAppUser(session.user);
-        setUser(appUser);
-        
-        if (appUser.role !== 'super_admin') {
-          setOrganization(mockOrganization);
-        } else {
-          setOrganization(null);
-        }
+      if (existingSession?.user) {
+        fetchUserData(existingSession.user).finally(() => setIsLoading(false));
+      } else {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -123,14 +167,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setOrganization(null);
   };
 
-  const switchRole = (role: UserRole) => {
-    if (user) {
-      setUser({ ...user, role });
-      if (role === 'super_admin') {
-        setOrganization(null);
-      } else {
-        setOrganization(mockOrganization);
-      }
+  const refetchUser = async () => {
+    if (session?.user) {
+      await fetchUserData(session.user);
     }
   };
 
@@ -143,7 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!session,
         isLoading,
         logout,
-        switchRole,
+        refetchUser,
       }}
     >
       {children}
